@@ -1,11 +1,10 @@
 /**
   ******************************************************************************
-  * File Name          : CRC.h
-  * Description        : This file provides code for the configuration
-  *                      of the CRC instances.
+  * File Name          : main.h
+  * Description        : This file contains the common defines of the application
   ******************************************************************************
   *
-  * COPYRIGHT(c) 2016 STMicroelectronics
+  * COPYRIGHT(c) 2017 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -32,30 +31,27 @@
   ******************************************************************************
   */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __crc_H
-#define __crc_H
-#ifdef __cplusplus
- extern "C" {
-#endif
+#ifndef __MAIN_H
+#define __MAIN_H
+  /* Includes ------------------------------------------------------------------*/
 
-/* Includes ------------------------------------------------------------------*/
-#include "stm32f3xx_hal.h"
+/* USER CODE BEGIN Includes */
 
-extern CRC_HandleTypeDef hcrc;
+/* USER CODE END Includes */
 
-void MX_CRC_Init(void);
+/* Private define ------------------------------------------------------------*/
 
-#ifdef __cplusplus
-}
-#endif
-#endif /*__ crc_H */
+/* USER CODE BEGIN Private defines */
+
+/* USER CODE END Private defines */
 
 /**
   * @}
-  */
+  */ 
 
 /**
   * @}
-  */
+*/ 
 
+#endif /* __MAIN_H */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

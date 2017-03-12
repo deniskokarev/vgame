@@ -2,12 +2,15 @@ SHELL = bash
 
 .DEFAULT_GOAL := all
 
-# rely on the master make file
+# to use the master make file
+AGCCBIN = /usr/local/gcc-arm-none-eabi-4_9-2015q2/bin/arm-none-eabi-
+CUBE = ../../STM32Cube_FW_F3_V1.7.0
 BOARD = STM32F3348-Discovery
 CHIP = STM32F334x8
-# LDSCRIPT may need to be specified explicitly if your chip has uncommon mem size
+
+# LDSCRIPT may need to be crafted if your chip has a differemt mem size other than a discovery board
 LDSCRIPT = STM32F334K8_FLASH.ld
-include ~/work/arm/cube3.mk
+include ./cube3.mk
 
 CFLAGS += -g -std=c99
 LDFLAGS += -g
@@ -17,7 +20,6 @@ PROJ_NAME = vgame
 SRC = $(wildcard Src/*.c)
 OBJS = mn.o \
 	$(SRC:%.c=%.o) \
-	$(SYSTEMOBJ) \
 	$(STARTUPOBJ)
 
 all: $(PROJ_NAME).elf
@@ -26,7 +28,7 @@ $(PROJ_NAME).elf: $(OBJS) $(LIBBSP) $(LIBHAL)
 	$(CC) $(LDFLAGS) -o $(@) $(OBJS) $(LIBBSP) $(LIBHAL)
 
 clean: cube_clean
-	rm -f *.o $(PROJ_NAME).elf $(PROJ_NAME).hex $(PROJ_NAME).bin
+	rm -f *.o Src/*.o $(PROJ_NAME).elf $(PROJ_NAME).hex $(PROJ_NAME).bin
 
 # Flash the MC
 burn upload flash: $(PROJ_NAME).bin

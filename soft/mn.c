@@ -11,14 +11,13 @@
 extern SPI_HandleTypeDef hspi1;
 #define GLCD_DEVICE_SPI	(&hspi1)
 
+#define CONTROLLER_SPI_SS_PORT  GPIOB
+#define CONTROLLER_SPI_SS_PIN   GPIO_PIN_6
 #define CONTROLLER_SPI_DC_PORT  GPIOB
 #define CONTROLLER_SPI_DC_PIN   GPIO_PIN_7
+#define CONTROLLER_SPI_RST_PORT GPIOA
+#define CONTROLLER_SPI_RST_PIN  GPIO_PIN_15
 
-#define CONTROLLER_SPI_RST_PORT  GPIOA
-#define CONTROLLER_SPI_RST_PIN   GPIO_PIN_15
-
-#define CONTROLLER_SPI_SS_PORT GPIOB
-#define CONTROLLER_SPI_SS_PIN  GPIO_PIN_6
 
 #define GPIO_ResetBits(GPIOX,PIN)	HAL_GPIO_WritePin(GPIOX,PIN,GPIO_PIN_RESET)
 #define GPIO_SetBits(GPIOX,PIN)		HAL_GPIO_WritePin(GPIOX,PIN,GPIO_PIN_SET)
@@ -36,6 +35,18 @@ static int random(int f, int t) {
     next = next * 1103515245 + 12345;
 	return(((float)(next & 65535))/65536*(float)diff+f);
 }
+
+
+/* Pin definitions: 
+Most of these pins can be moved to any digital or analog pin.
+DN(MOSI)and SCLK should be left where they are (SPI pins). The 
+LED (backlight) pin should remain on a PWM-capable pin. */
+const int scePin = 7;   // SCE - Chip select, pin 3 on LCD.
+const int rstPin = 6;   // RST - Reset, pin 4 on LCD.
+const int dcPin = 5;    // DC - Data/Command, pin 5 on LCD.
+const int sdinPin = 11;  // DN(MOSI) - Serial data, pin 6 on LCD.
+const int sclkPin = 13;  // SCLK - Serial clock, pin 7 on LCD.
+const int blPin = 9;    // LED - Backlight LED, pin 8 on LCD.
 
 /* PCD8544-specific defines: */
 #define LCD_COMMAND  0 
@@ -247,7 +258,7 @@ void LCDWrite(byte data_or_command, byte data)
 #if 0
   digitalWrite(scePin, HIGH);
 #else
-  GLCD_DESELECT();
+  //GLCD_DESELECT();
 #endif
 }
 
@@ -662,7 +673,7 @@ void setup()
 
   lcdBegin(); // This will setup our pins, and initialize the LCD
   updateDisplay(); // with displayMap untouched, SFE logo
-  setContrast(40); // Good values range from 40-60
+  setContrast(50); // Good values range from 40-60
   delay(2000);
   
   lcdFunTime(); // Runs a 30-second demo of graphics functions
@@ -677,7 +688,7 @@ void setup()
 void runDisplay() {
   lcdBegin(); // This will setup our pins, and initialize the LCD
   updateDisplay(); // with displayMap untouched, SFE logo
-  setContrast(50); // Good values range from 40-60
+  setContrast(60); // Good values range from 40-60
   delay(2000);
   lcdFunTime(); // Runs a 30-second demo of graphics functions
   clearDisplay(WHITE);
