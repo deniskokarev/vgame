@@ -43,6 +43,7 @@ extern void runDisplay();
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+/* Private variables ---------------------------------------------------------*/
 
 /* USER CODE END PV */
 
@@ -51,6 +52,7 @@ void SystemClock_Config(void);
 void Error_Handler(void);
 
 /* USER CODE BEGIN PFP */
+/* Private function prototypes -----------------------------------------------*/
 
 /* USER CODE END PFP */
 
@@ -88,9 +90,7 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-	  HAL_Delay(10000);
 	  runDisplay();
-
   }
   /* USER CODE END 3 */
 
