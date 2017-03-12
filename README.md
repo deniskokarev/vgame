@@ -5,9 +5,11 @@ STM32F3 and Nokia LCD mini-game console
 * soft - CubeMX/HAL-based project compilable with GNU toolkit
 
 Standard Makefile compilation on Mac and Linux. Requires:
-* gcc-arm-none-eabi - ARM GCC compiler
-* STM32Cube_FW_F3_V1.7.0 - HAL library
-* stutils (st-flash/st-util) - to flash/debug firmware with STLink programmer
+* gcc-arm-none-eabi - ARM GCC compiler: https://launchpad.net/gcc-arm-embedded
+* STM32Cube_FW_F3_V1.7.0 - HAL library: http://www.st.com/en/embedded-software/stm32cubef3.html - click on "Get Software"
+* stlink tools (st-flash/st-util) - to flash/debug firmware with STLink programmer: https://github.com/texane/stlink
+* STLink programmer itself: http://www.st.com/en/development-tools/st-link-v2.html
+* if you plan to change hardware you will need STM32CubeMX tool: http://www.st.com/en/development-tools/stm32cubemx.html - click on "Get Software" 
 
 ```
 make && make flash
@@ -15,7 +17,7 @@ make && make flash
 then to debug
 
 ```
-xterm -e st-util &
+xterm -e st-util &		# spawn st-util on different console
 make debug
 ```
 
