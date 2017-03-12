@@ -1,0 +1,40 @@
+SHELL = bash
+
+.DEFAULT_GOAL := all
+
+# rely on the master make file
+BOARD = STM32F3348-Discovery
+CHIP = STM32F334x8
+# LDSCRIPT may need to be specified explicitly if your chip has uncommon mem size
+LDSCRIPT = STM32F334K8_FLASH.ld
+include ~/work/arm/cube3.mk
+
+CFLAGS += -g -std=c99
+LDFLAGS += -g
+
+# Binaries will be generated with this name (.elf, .bin, .hex, etc)
+PROJ_NAME = vgame
+SRC = $(wildcard Src/*.c)
+OBJS = mn.o \
+	$(SRC:%.c=%.o) \
+	$(SYSTEMOBJ) \
+	$(STARTUPOBJ)
+
+all: $(PROJ_NAME).elf
+
+$(PROJ_NAME).elf: $(OBJS) $(LIBBSP) $(LIBHAL)
+	$(CC) $(LDFLAGS) -o $(@) $(OBJS) $(LIBBSP) $(LIBHAL)
+
+clean: cube_clean
+	rm -f *.o $(PROJ_NAME).elf $(PROJ_NAME).hex $(PROJ_NAME).bin
+
+# Flash the MC
+burn upload flash: $(PROJ_NAME).bin
+	$(STFLASH) write $(PROJ_NAME).bin 0x8000000
+
+# you need to have st-util running on different console
+# we're automatically attaching gdb to it with `tar ext: 4242`
+# then we flash and set breakpoint at main
+debug: $(PROJ_NAME).elf gdb.x
+	$(AGCCBIN)gdb -x gdb.x $(PROJ_NAME).elf
+
