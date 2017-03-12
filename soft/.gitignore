@@ -1,2 +1,9 @@
 .mxproject
 TrueSTUDIO
+*.o
+*.a
+*.bin
+*.elf
+USBD_CDC.h
+fix_fups
+cubeobj
