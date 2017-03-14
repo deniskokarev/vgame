@@ -12,7 +12,8 @@ CHIP = STM32F334x8
 LDSCRIPT = STM32F334K8_FLASH.ld
 include ./cube3.mk
 
-CFLAGS += -g -std=c99
+CFLAGS += -IAdafruit-GFX-Library -Wall -Os -g -std=c99
+CXXFLAGS += -IAdafruit-GFX-Library -Wall -Os -g -std=c++11
 LDFLAGS += -g
 
 # Binaries will be generated with this name (.elf, .bin, .hex, etc)
@@ -20,15 +21,17 @@ PROJ_NAME = vgame
 SRC = $(wildcard Src/*.c)
 OBJS = mn.o \
 	$(SRC:%.c=%.o) \
-	$(STARTUPOBJ)
+	$(STARTUPOBJ) \
+	Adafruit-GFX-Library/Adafruit_GFX.o \
+	Adafruit-GFX-Library/glcdfont.o
 
 all: $(PROJ_NAME).elf
 
 $(PROJ_NAME).elf: $(OBJS) $(LIBBSP) $(LIBHAL)
-	$(CC) $(LDFLAGS) -o $(@) $(OBJS) $(LIBBSP) $(LIBHAL)
+	$(CXX) $(LDFLAGS) -o $(@) $(OBJS) $(LIBBSP) $(LIBHAL)
 
 clean: cube_clean
-	rm -f *.o Src/*.o $(PROJ_NAME).elf $(PROJ_NAME).hex $(PROJ_NAME).bin
+	rm -f *.o Src/*.o Adafruit-GFX-Library/*.o $(PROJ_NAME).elf $(PROJ_NAME).hex $(PROJ_NAME).bin
 
 # Flash the MC
 burn upload flash: $(PROJ_NAME).bin

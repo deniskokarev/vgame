@@ -22,6 +22,7 @@ USBINCDIRS = $(wildcard $(USBDIR)/Class/*/Inc) $(USBDIR)/Core/Inc
 # where is your no EABI ARM GCC compiler
 #AGCCBIN = /usr/local/gcc-arm-none-eabi-4_9-2015q2/bin/arm-none-eabi-
 CC = $(AGCCBIN)gcc
+CXX = $(AGCCBIN)g++
 AS = $(AGCCBIN)as
 AR = $(AGCCBIN)ar
 LD = $(AGCCBIN)ld
@@ -30,24 +31,29 @@ OBJCOPY = $(AGCCBIN)objcopy
 STFLASH = st-flash
 
 ARCH_FLAGS = -march=armv7e-m -mcpu=cortex-m4 -mlittle-endian -mthumb -mthumb-interwork -mfloat-abi=hard -mfpu=fpv4-sp-d16 -static
-
-ifndef LDSCRIPT 
-	LDSCRIPT = $(wildcard $(TEMPL)/TrueSTUDIO/*/*.ld)
-endif
-LDFLAGS = $(ARCH_FLAGS) -lm -lc --specs=nano.specs -Wl,--gc-sections -T$(LDSCRIPT)
-
-CFLAGS = $(ARCH_FLAGS) -D$(CHIP) -DARM_MATH_CM4
-CFLAGS += -nostartfiles -nostdlib
-CFLAGS += -ffunction-sections -fdata-sections -fno-common
-CFLAGS += -Wall 
-CFLAGS += \
-	-I. \
+CUBE_INC = -I. \
 	-I./Inc \
 	-I$(CUBE)/Drivers/CMSIS/Device/ST/STM32F3xx/Include \
 	-I$(CUBE)/Drivers/CMSIS/Include \
 	-I$(HALDIR)/Inc \
 	-I$(BSPDIR) \
 	$(foreach idir,$(USBINCDIRS),-I$(idir))
+
+ifndef LDSCRIPT 
+	LDSCRIPT = $(wildcard $(TEMPL)/TrueSTUDIO/*/*.ld)
+endif
+LDFLAGS = $(ARCH_FLAGS) -lm -lc --specs=nano.specs -Wl,--gc-sections -T$(LDSCRIPT)
+
+CFLAGS = $(ARCH_FLAGS) -D$(CHIP) -DARM_MATH_CM4 \
+	-nostartfiles -nostdlib -nodefaultlibs \
+	-ffunction-sections -fdata-sections -fno-common \
+	$(CUBE_INC)
+
+CXXFLAGS = $(ARCH_FLAGS) -D$(CHIP) -DARM_MATH_CM4 \
+	-nostartfiles -nostdlib -nodefaultlibs \
+	-ffunction-sections -fdata-sections -fno-common \
+	-fno-rtti -fno-exceptions -fno-threadsafe-statics \
+	$(CUBE_INC)
 
 BSPSRC = $(wildcard $(BSPDIR)/*.c) $(wildcard $(BSPDIR)/../Components/*/*.c)
 BSPOBJ := $(patsubst %.c,cubeobj/%.o,$(subst $(CUBE)/,,$(BSPSRC)))
