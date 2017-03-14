@@ -14,8 +14,11 @@ Adafruit_PCD8544_HAL display = Adafruit_PCD8544_HAL(hspi1, dc, cs, rst);
 // our main event loop to be invoked from HAL main.c
 extern "C" void run() {
 	display.begin();
+	int color = BLACK;
 	while (true) {
+		display.fillScreen(color);
 		display.display();
 		HAL_Delay(1000);
+		color ^= 1;
 	}
 }
