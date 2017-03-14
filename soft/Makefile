@@ -12,23 +12,26 @@ CHIP = STM32F334x8
 LDSCRIPT = STM32F334K8_FLASH.ld
 include ./cube3.mk
 
-CFLAGS += -IAdafruit-GFX-Library -Wall -Os -g -std=c99
-CXXFLAGS += -IAdafruit-GFX-Library -Wall -Os -g -std=c++11
+CFLAGS += -IAdafruit-GFX-Library -Wall -Os -std=c99 -g
+CXXFLAGS += -IAdafruit-GFX-Library -Wall -Os -std=c++11 -g
 LDFLAGS += -g
 
 # Binaries will be generated with this name (.elf, .bin, .hex, etc)
 PROJ_NAME = vgame
 SRC = $(wildcard Src/*.c)
-OBJS = mn.o \
+OBJS = run.o \
 	$(SRC:%.c=%.o) \
 	$(STARTUPOBJ) \
+	cxx.o \
 	Adafruit-GFX-Library/Adafruit_GFX.o \
-	Adafruit-GFX-Library/glcdfont.o
+	Adafruit-GFX-Library/glcdfont.o \
+	Adafruit_PCD8544_HAL.o
 
 all: $(PROJ_NAME).elf
 
+# link with CC instead of CXX to watch out for accidental code bloating
 $(PROJ_NAME).elf: $(OBJS) $(LIBBSP) $(LIBHAL)
-	$(CXX) $(LDFLAGS) -o $(@) $(OBJS) $(LIBBSP) $(LIBHAL)
+	$(CC) $(LDFLAGS) -o $(@) $(OBJS) $(LIBBSP) $(LIBHAL)
 
 clean: cube_clean
 	rm -f *.o Src/*.o Adafruit-GFX-Library/*.o $(PROJ_NAME).elf $(PROJ_NAME).hex $(PROJ_NAME).bin
