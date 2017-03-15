@@ -27,6 +27,9 @@ OBJS = run.o \
 	Adafruit-GFX-Library/glcdfont.o \
 	Adafruit_PCD8544_HAL.o
 
+Adafruit_PCD8544_HAL.o: Adafruit_PCD8544_HAL.h
+run.o: Adafruit_PCD8544_HAL.h run.h
+
 all: $(PROJ_NAME).elf
 
 # link with CC instead of CXX to watch out for accidental code bloating
