@@ -67,7 +67,7 @@ class Adafruit_PCD8544_HAL : public Adafruit_GFX {
   void begin(uint8_t contrast = 60, uint8_t bias = 0x04);
   
   void command(uint8_t c);
-  void data(uint8_t c);
+  void data(uint8_t *p, uint16_t sz);
   
   void setContrast(uint8_t val);
   void clearDisplay(void);
@@ -81,7 +81,6 @@ class Adafruit_PCD8544_HAL : public Adafruit_GFX {
   const Adafruit_PCD8544_HAL_Pin &_dc;
   const Adafruit_PCD8544_HAL_Pin &_cs;
   const Adafruit_PCD8544_HAL_Pin &_rst;
-  void spiWrite(uint8_t c);
 };
 
 #endif
