@@ -6,3 +6,8 @@
  * bloating the code by 50K
  */
 void __cxa_pure_virtual(void) {};
+
+/*
+ * some math functions need errno
+ */
+int __errno;
