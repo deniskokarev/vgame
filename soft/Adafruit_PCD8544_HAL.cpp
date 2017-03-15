@@ -93,8 +93,9 @@ uint8_t Adafruit_PCD8544_HAL::getPixel(int8_t x, int8_t y) {
 
 void Adafruit_PCD8544_HAL::begin(uint8_t contrast, uint8_t bias) {
   digitalWrite(_rst, LOW);
+  HAL_Delay(10);
   digitalWrite(_rst, HIGH);
-  HAL_Delay(100);
+  HAL_Delay(10);
 
   digitalWrite(_cs, LOW);
   digitalWrite(_dc, LOW);
