@@ -77,10 +77,16 @@ class Adafruit_PCD8544_HAL : public Adafruit_GFX {
   uint8_t getPixel(int8_t x, int8_t y);
 
  private:
+  enum {
+	  COMMAND = 0,
+	  DATA = 1
+  };
   SPI_HandleTypeDef &_hspi;
   const Adafruit_PCD8544_HAL_Pin &_dc;
   const Adafruit_PCD8544_HAL_Pin &_cs;
   const Adafruit_PCD8544_HAL_Pin &_rst;
+  uint8_t pcd8544_buffer[LCDWIDTH * LCDHEIGHT / 8];
+  uint8_t mode;
 };
 
 #endif

@@ -24,13 +24,6 @@ All text above, and the splash screen below must be included in any redistributi
 #define	LOW		GPIO_PIN_RESET
 #define	HIGH	GPIO_PIN_SET
 
-static uint8_t pcd8544_buffer[LCDWIDTH * LCDHEIGHT / 8];
-
-  enum {
-	  COMMAND = 0,
-	  DATA = 1
-  };
-  uint8_t mode = COMMAND;
 
 static void digitalWrite(const Adafruit_PCD8544_HAL_Pin &pin, GPIO_PinState val) {
 	HAL_GPIO_WritePin(pin.base, pin.pin, val);
@@ -125,7 +118,7 @@ void Adafruit_PCD8544_HAL::begin(uint8_t contrast, uint8_t bias) {
 
   // Set display to Normal
   command(PCD8544_DISPLAYCONTROL | PCD8544_DISPLAYNORMAL);
-  //digitalWrite(_cs, HIGH);
+  digitalWrite(_cs, HIGH);
 }
 
 
@@ -172,7 +165,7 @@ void Adafruit_PCD8544_HAL::display(void) {
 
 	data(pcd8544_buffer, sizeof(pcd8544_buffer));
 	
-	//	digitalWrite(_cs, HIGH);
+	digitalWrite(_cs, HIGH);
 }
 
 // clear everything
