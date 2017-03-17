@@ -37,7 +37,50 @@ struct DynamicPoint {
 std::uniform_real_distribution<double> DynamicPoint::unif(-1.0, 1.0);
 std::default_random_engine DynamicPoint::re;
 
+
 #define dim(X) ((sizeof(X)/sizeof(X[0])))
+
+template <typename T, int SZ> struct RingBuf {
+	T q[SZ];
+	int h, t;
+	bool isEmpty() {
+		return t != h;
+	}
+	T get() {
+		if (t != h) {
+			int rc = q[h];
+			h = (h+1) % dim(q);
+			return rc;
+		} else {
+			return T(0);
+		}
+	}
+	void put(T e) {
+		int nt = (t+1) % dim(q);
+		if (nt != h) {
+			q[t] = e;
+			t = nt;
+		} // otherwise just ignore
+	}
+};
+
+struct Events : public RingBuf<uint8_t, 16> {
+	enum {
+		EV_NONE,
+		EV_TIMER,
+		EV_KEY
+	};
+};
+
+Events events;
+
+/*
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+    if (htim == &htim6) {
+		events.put(Events::EV_TIMER);
+    }
+}
+*/
 				
 // our main event loop to be invoked from HAL main.c
 extern "C" void run() {
@@ -45,13 +88,21 @@ extern "C" void run() {
 	//DynamicPoint p[12];
 	int y = 0;
 	while (true) {
-		display.clearDisplay();
-		for (auto x=0; x<display.width(); x++) {
-			display.drawPixel(x, y, BLACK);
+		events.put(Events::EV_TIMER);
+		if (events.get() == Events::EV_TIMER) {
+			display.clearDisplay();
+			for (auto x=0; x<display.width(); x++) {
+				display.drawPixel(x, y, BLACK);
+			}
+			y++;
+			y %= display.height();
+			display.display();
 		}
-		y++;
-		y %= display.height();
-		display.display();
-		HAL_Delay(50);
+		HAL_Delay(30);
+		//HAL_SuspendTick();
+		/* Request to enter SLEEP mode */
+		//HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+		/* Resume Tick interrupt if disabled prior to sleep mode entry*/
+		//HAL_ResumeTick();
 	}
 }
