@@ -71,8 +71,15 @@ struct Events : public RingBuf<uint8_t, 16> {
 	enum {
 		EV_NONE,
 		EV_TIMER,
-		EV_KEY
+		EV_KEY_LEFT,
+		EV_KEY_UP,
+		EV_KEY_DOWN,
+		EV_KEY_RIGHT,
+		EV_KEY_ENTER
 	};
+	bool isKey(uint8_t e) {
+		return e >= EV_KEY_LEFT && e <= EV_KEY_ENTER;
+	}
 };
 
 Events events;
@@ -87,6 +94,44 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
 #define RTCHandle hrtc
 
+extern "C" void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+	switch (GPIO_Pin) {
+	case GPIO_PIN_3:
+		events.put(Events::EV_KEY_DOWN);
+		break;
+	case GPIO_PIN_4:
+		events.put(Events::EV_KEY_LEFT);
+		break;
+	case GPIO_PIN_5:
+		events.put(Events::EV_KEY_ENTER);
+		break;
+	case GPIO_PIN_6:
+		events.put(Events::EV_KEY_RIGHT);
+		break;
+	case GPIO_PIN_7:
+		events.put(Events::EV_KEY_UP);
+		break;
+	}
+}
+
+//HAL_RTCEx_WakeUpTimerIRQHandler
+
+#if 0
+extern "C" void HAL_RTCEx_WakeUpTimerIRQHandler(RTC_HandleTypeDef *hrtc) {
+#else
+extern "C" void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc) {
+	//void RTC_WKUP_IRQHandler(void)
+  events.put(Events::EV_TIMER);
+}
+#endif
+
+//extern "C" void HAL_RTCEx_WakeUpTimerIRQHandler(RTC_HandleTypeDef *hrtc) {
+//}
+
+//extern "C" void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc) {
+//	events.put(Events::EV_TIMER);
+//}
+	
 // our main event loop to be invoked from HAL main.c
 extern "C" void run() {
 	display.begin();
@@ -116,7 +161,7 @@ extern "C" void run() {
   }
 #endif
 	//DynamicPoint p[12];
-	int y = 0;
+	int y = events.get();
 	while (true) {
 		events.put(Events::EV_TIMER);
 		if (events.get() == Events::EV_TIMER) {
