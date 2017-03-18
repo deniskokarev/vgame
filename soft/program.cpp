@@ -1,3 +1,7 @@
+/*
+ * User-level API to progrm our mini-console
+ */
+
 #include "program.h"
 
 #include "gpio.h"
@@ -15,6 +19,9 @@ const static Adafruit_PCD8544_HAL_Pin dc {GPIOB, GPIO_PIN_7};
 const static Adafruit_PCD8544_HAL_Pin cs {GPIOB, GPIO_PIN_6};
 const static Adafruit_PCD8544_HAL_Pin rst {GPIOA, GPIO_PIN_15};
 
+/*
+ * Event queue ring buffer
+ */
 EventQueue::EventQueue(Event *_q, int _sz):q(_q),sz(_sz){
 	h = t = 0;
 };

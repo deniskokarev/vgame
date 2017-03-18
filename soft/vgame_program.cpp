@@ -1,10 +1,13 @@
 #include "program.h"
 
+/*
+ * A custom demo-program for our mini-console
+ */
+
 class MyProgram: public Program {
 protected:
 public:
-	MyProgram():Program() {
-	}
+	/* we just have to redefine event handler */
 	virtual void handleEvent(Event event) override {
 		const char *msg;
 		switch (event) {
@@ -35,4 +38,5 @@ public:
 	}
 };
 
+/* just create a global instance of it to plug it in */
 MyProgram mp;

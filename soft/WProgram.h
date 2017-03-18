@@ -1,4 +1,4 @@
-/* to make Adafruit GFX lib happy on STM32 */
+/* simple stub to make Adafruit GFX lib happy on STM32 */
 #include <cstdint>
 #include <cstring>
 #include <cstdlib>
