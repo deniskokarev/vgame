@@ -2,8 +2,8 @@
 extern "C" {
 #endif
 
-/* our app event loop */
-void run();
+/* our app execution point */
+void exec();
 
 #ifdef __cplusplus
 }

@@ -19,16 +19,18 @@ LDFLAGS += -g
 # Binaries will be generated with this name (.elf, .bin, .hex, etc)
 PROJ_NAME = vgame
 SRC = $(wildcard Src/*.c)
-OBJS = run.o \
+INC = $(wildcard Inc/*.h) Adafruit_PCD8544_HAL.h program.h
+OBJS = \
 	$(SRC:%.c=%.o) \
 	$(STARTUPOBJ) \
 	cxx.o \
 	Adafruit-GFX-Library/Adafruit_GFX.o \
 	Adafruit-GFX-Library/glcdfont.o \
-	Adafruit_PCD8544_HAL.o
+	Adafruit_PCD8544_HAL.o \
+	program.o
 
-Adafruit_PCD8544_HAL.o: Adafruit_PCD8544_HAL.h
-run.o: Adafruit_PCD8544_HAL.h run.h
+Adafruit_PCD8544_HAL.o: $(INC)
+program.o: $(INC)
 
 all: $(PROJ_NAME).elf
 

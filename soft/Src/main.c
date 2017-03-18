@@ -39,7 +39,7 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
-#include "run.h"
+#include "exec.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -94,7 +94,7 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-	  run();
+	  exec();
   }
   /* USER CODE END 3 */
 
