@@ -120,7 +120,7 @@ public:
 			if (event != Events::EV_NONE)
 				Program::program->handleEvent(event);
 			else
-				Program::program->sleepSleep(5);
+				Program::program->sleepSleep(1);
 		}
 	}
 };
@@ -135,13 +135,13 @@ extern "C" void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 		events.put(Events::EV_KEY_DOWN);
 		break;
 	case GPIO_PIN_4:
-		events.put(Events::EV_KEY_LEFT);
+		events.put(Events::EV_KEY_RIGHT);
 		break;
 	case GPIO_PIN_5:
 		events.put(Events::EV_KEY_ENTER);
 		break;
 	case GPIO_PIN_6:
-		events.put(Events::EV_KEY_RIGHT);
+		events.put(Events::EV_KEY_LEFT);
 		break;
 	case GPIO_PIN_7:
 		events.put(Events::EV_KEY_UP);
@@ -159,17 +159,35 @@ extern "C" void exec() {
 
 class MyProgram: public Program {
 protected:
-	int y;
 public:
-	MyProgram():Program(),y(0) {
+	MyProgram():Program() {
 	}
 	virtual void handleEvent(uint8_t event) override {
-		display.clearDisplay();
-		for (auto x=0; x<display.width(); x++) {
-			display.drawPixel(x, y, BLACK);
+		const char *msg;
+		switch (event) {
+		case Events::EV_KEY_LEFT:
+			msg = "LEFT";
+			break;
+		case Events::EV_KEY_RIGHT:
+			msg = "RIGHT";
+			break;
+		case Events::EV_KEY_UP:
+			msg = "UP";
+			break;
+		case Events::EV_KEY_DOWN:
+			msg = "DOWN";
+			break;
+		case Events::EV_KEY_ENTER:
+			msg = "ENTER";
+			break;
+		default:
+			msg = "SLEEPING...";
 		}
-		y++;
-		y %= display.height();
+		display.clearDisplay();
+		display.setTextSize(1);
+		display.setTextColor(BLACK);
+		display.setCursor(0,0);
+		display.print(msg);
 		display.display();
 	}
 };

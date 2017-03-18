@@ -7,7 +7,11 @@ typedef bool boolean;
 typedef char* __FlashStringHelper;
 
 struct Print {
-	void print(const char *s){}
+	virtual void write(uint8_t);
+	void print(const char *s) {
+		while (*s)
+			write(*s++);
+	}
 };
 
 inline uint8_t _pgm_read_byte(const void *addr) {
