@@ -2,7 +2,7 @@
 extern "C" {
 #endif
 
-/* our app execution point */
+/* our app execution point defined in program.cpp */
 void exec();
 
 #ifdef __cplusplus

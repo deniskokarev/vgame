@@ -23,14 +23,15 @@ INC = $(wildcard Inc/*.h) Adafruit_PCD8544_HAL.h program.h
 OBJS = \
 	$(SRC:%.c=%.o) \
 	$(STARTUPOBJ) \
-	cxx.o \
 	Adafruit-GFX-Library/Adafruit_GFX.o \
 	Adafruit-GFX-Library/glcdfont.o \
 	Adafruit_PCD8544_HAL.o \
-	program.o
+	program.o \
+	vgame_program.o
 
 Adafruit_PCD8544_HAL.o: $(INC)
 program.o: $(INC)
+vgame_program.o: $(INC)
 
 all: $(PROJ_NAME).elf
 
@@ -50,4 +51,3 @@ burn upload flash: $(PROJ_NAME).bin
 # then we flash and set breakpoint at main
 debug: $(PROJ_NAME).elf gdb.x
 	$(AGCCBIN)gdb -x gdb.x $(PROJ_NAME).elf
-
