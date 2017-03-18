@@ -5,6 +5,9 @@
 
 /* hspi1 SPI port number defined and initialized in HAL */
 #include "spi.h"
+#include "rtc.h"
+
+extern "C" void SystemClock_Config(void);
 
 /* our pins defined and initialized in HAL */
 static Adafruit_PCD8544_HAL_Pin dc {GPIOB, GPIO_PIN_7};  
@@ -81,10 +84,37 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     }
 }
 */
-				
+
+#define RTCHandle hrtc
+
 // our main event loop to be invoked from HAL main.c
 extern "C" void run() {
 	display.begin();
+#if 0
+	HAL_SuspendTick();
+	/* Request to enter SLEEP mode */
+	HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+	/* Resume Tick interrupt if disabled prior to sleep mode entry*/
+	HAL_ResumeTick();
+#else
+  /* Disable Wake-up timer */
+  HAL_RTCEx_DeactivateWakeUpTimer(&RTCHandle);
+
+  HAL_RTCEx_SetWakeUpTimer_IT(&RTCHandle, 2500*5, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
+
+  /* Enter Stop Mode */
+  HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
+
+  /* Configures system clock after wake-up from STOP: enable HSI and PLL with HSI as source*/
+  SystemClock_Config();
+  
+  /* Disable Wake-up timer */
+  if(HAL_RTCEx_DeactivateWakeUpTimer(&RTCHandle) != HAL_OK)
+  {
+    /* Initialization Error */
+    Error_Handler(); 
+  }
+#endif
 	//DynamicPoint p[12];
 	int y = 0;
 	while (true) {
@@ -98,11 +128,6 @@ extern "C" void run() {
 			y %= display.height();
 			display.display();
 		}
-		HAL_Delay(30);
-		//HAL_SuspendTick();
-		/* Request to enter SLEEP mode */
-		//HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
-		/* Resume Tick interrupt if disabled prior to sleep mode entry*/
-		//HAL_ResumeTick();
+		HAL_Delay(100);
 	}
 }
