@@ -1,3 +1,6 @@
 [submodule "soft/Adafruit-GFX-Library"]
 	path = soft/Adafruit-GFX-Library
 	url = https://github.com/adafruit/Adafruit-GFX-Library
+[submodule "soft/reversy"]
+	path = soft/reversy
+	url = https://github.com/deniskokarev/reversy

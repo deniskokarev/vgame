@@ -1,56 +1,39 @@
 #include "program.h"
-//#include <algorithm>
+#include "game.h"
 
 /*
  * A custom demo-program for our mini-console
  */
 
-const unsigned char whiteChip[5][6] = {
-	{0, 0, 0, 0, 0, 0},
-	{0, 0, 1, 1, 0, 0},
-	{0, 1, 0, 0, 1, 0},
-	{0, 0, 1, 1, 0, 0},
-	{0, 0, 0, 0, 0, 0},
-};
-
-const unsigned char blackChip[5][6] = {
-	{0, 0, 0, 0, 0, 0},
-	{0, 0, 1, 1, 0, 0},
-	{0, 1, 1, 1, 1, 0},
-	{0, 0, 1, 1, 0, 0},
-	{0, 0, 0, 0, 0, 0},
-};
-
-static constexpr int gr = 8;
-
 class MyProgram: public Program {
 protected:
-	const int ysz;
-	const int yl;
-	const int xsz;
-	const int xl;
-
+	static constexpr int gr = MAX_DIM;
+	static constexpr int ysz = LCDHEIGHT/gr;
+	static constexpr int yl = ysz*gr-1;
+	static constexpr int xsz = ysz+1;
+	static constexpr int xl = xsz*gr-1;
+	static const unsigned char whiteChip[ysz-2][xsz-2];
+	static const unsigned char blackChip[ysz-2][xsz-2];
+	
 	int cursorX;
 	int cursorY;
 	
-	int board[gr][gr];
+	GAME_STATE board;
 	
-	void drawNoChip(int r, int c) {
-		int px = xsz * c;
-		int py = ysz * r;
-		for (int y=0; y<ysz-1; y++)
-			for (int x=0; x<xsz-1; x++)
-				display.drawPixel(px+x, py+y, WHITE);
-	}
-
-	void drawChip(int r, int c, int color) {
-		const unsigned char (&chip)[5][6] = (color == WHITE)?whiteChip:blackChip;
-		int px = xsz * c;
-		int py = ysz * r;
-		for (int y=0; y<ysz-1; y++)
-			for (int x=0; x<xsz-1; x++)
-				if (chip[y][x] != 0)
-					display.drawPixel(px+x, py+y, BLACK);
+	void drawChip(int r, int c, CHIP_COLOR color) {
+		int px = xsz * c + 1;
+		int py = ysz * r + 1;
+		if (color == COLOR_VACANT) {
+			for (int y=0; y<ysz-2; y++)
+				for (int x=0; x<xsz-2; x++)
+					display.drawPixel(px+x, py+y, WHITE);
+		} else {
+			const unsigned char (&chip)[ysz-2][xsz-2] = (color == COLOR_WHITE)?whiteChip:blackChip;
+			for (int y=0; y<ysz-2; y++)
+				for (int x=0; x<xsz-2; x++)
+					if (chip[y][x] != 0)
+						display.drawPixel(px+x, py+y, BLACK);
+		}
 	}
 										  
 	void drawCursor(int r, int c, int color) {
@@ -73,20 +56,16 @@ protected:
 	
 public:
 	MyProgram():Program(),
-				ysz(display.height()/gr),
-				yl(ysz*gr-1),
-				xsz(ysz+1),
-				xl(xsz*gr-1),
 				cursorX(3),
 				cursorY(3)
 	{
 		for (int i=0; i<gr; i++)
 			for (int j=0; j<gr; j++)
-				board[i][j] = 0;
-		board[3][3] = 1;
-		board[4][4] = 1;
-		board[3][4] = 2;
-		board[4][3] = 2;
+				board[i][j] = COLOR_VACANT;
+		board[gr/2-1][gr/2-1] = COLOR_WHITE;
+		board[gr/2][gr/2] = COLOR_WHITE;
+		board[gr/2-1][gr/2] = COLOR_BLACK;
+		board[gr/2][gr/2-1] = COLOR_BLACK;
 	}
 
 	virtual void init() override {
@@ -97,17 +76,9 @@ public:
 	}
 
 	void redrawBoard() {
-		for (int r=0; r<8; r++) {
-			for (int c=0; c<8; c++) {
-				if (board[r][c] == 1) {
-					drawChip(r, c, WHITE);
-				} else if (board[r][c] == 2) {
-					drawChip(r, c, BLACK);
-				} else {
-					drawNoChip(r, c);
-				}
-			}
-		}
+		for (int r=0; r<gr; r++)
+			for (int c=0; c<gr; c++)
+				drawChip(r, c, board[r][c]);
 		drawCursor(cursorY, cursorX, BLACK);
 		display.display();
 	}
@@ -136,8 +107,8 @@ public:
 			return;
 		}
 		if ((dx != 0 || dy != 0) &&
-			cursorX+dx >= 0 && cursorX+dx < 8 &&
-			cursorY+dy >= 0 && cursorY+dy < 8)
+			cursorX+dx >= 0 && cursorX+dx < gr &&
+			cursorY+dy >= 0 && cursorY+dy < gr)
 		{
 			drawCursor(cursorY, cursorX, WHITE);
 			cursorX += dx;
@@ -145,6 +116,18 @@ public:
 		}
 		redrawBoard();
 	}
+};
+
+const unsigned char MyProgram::whiteChip[ysz-2][xsz-2] = {
+	{0, 1, 1, 0},
+	{1, 0, 0, 1},
+	{0, 1, 1, 0},
+};
+
+const unsigned char MyProgram::blackChip[ysz-2][xsz-2] = {
+	{0, 1, 1, 0},
+	{1, 1, 1, 1},
+	{0, 1, 1, 0},
 };
 
 /* just create a global instance of it to plug it in */

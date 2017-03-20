@@ -12,19 +12,21 @@ CHIP = STM32F334x8
 LDSCRIPT = STM32F334K8_FLASH.ld
 include ./cube3.mk
 
-CFLAGS += -IAdafruit-GFX-Library -Wall -std=c99 -Os -g
-CXXFLAGS += -IAdafruit-GFX-Library -Wall -std=c++11 -Os -g
+CFLAGS += -IAdafruit-GFX-Library -Ireversy -Wall -std=c99 -Os -g
+CXXFLAGS += -IAdafruit-GFX-Library -Ireversy -Wall -std=c++11 -Os -g
 LDFLAGS += -g
 
 # Binaries will be generated with this name (.elf, .bin, .hex, etc)
 PROJ_NAME = vgame
 SRC = $(wildcard Src/*.c)
-INC = $(wildcard Inc/*.h) Adafruit_PCD8544_HAL.h program.h
+INC = $(wildcard Inc/*.h) reversy/game.h reversy/minimax.h Adafruit_PCD8544_HAL.h program.h
 OBJS = \
 	$(SRC:%.c=%.o) \
 	$(STARTUPOBJ) \
 	Adafruit-GFX-Library/Adafruit_GFX.o \
 	Adafruit-GFX-Library/glcdfont.o \
+	reversy/game.o \
+	reversy/minimax.o \
 	Adafruit_PCD8544_HAL.o \
 	program.o \
 	vgame_program.o
