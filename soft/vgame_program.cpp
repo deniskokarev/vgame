@@ -1,5 +1,24 @@
 #include "program.h"
+
+extern "C" {
 #include "game.h"
+}
+
+#if 0
+static char *
+lltoan(char *out, long long i, int n) {
+	char *p = out;
+	static char s[] = "0123456789";
+	int v = n;
+	while (v > 0) {
+		int d = i % 10;
+		i /= 10;
+		p = s + d;
+		out[--v] = *p;
+	}
+	return(out + n);
+}
+#endif
 
 /*
  * A custom demo-program for our mini-console
@@ -14,11 +33,13 @@ protected:
 	static constexpr int xl = xsz*gr-1;
 	static const unsigned char whiteChip[ysz-2][xsz-2];
 	static const unsigned char blackChip[ysz-2][xsz-2];
-	
+
 	int cursorX;
 	int cursorY;
 	
-	GAME_STATE board;
+	CHIP_COLOR mycolor;
+	
+	GAME_STATE board __attribute__ ((aligned (8)));
 	
 	void drawChip(int r, int c, CHIP_COLOR color) {
 		int px = xsz * c + 1;
@@ -33,6 +54,8 @@ protected:
 				for (int x=0; x<xsz-2; x++)
 					if (chip[y][x] != 0)
 						display.drawPixel(px+x, py+y, BLACK);
+					else
+						display.drawPixel(px+x, py+y, WHITE);
 		}
 	}
 										  
@@ -57,7 +80,8 @@ protected:
 public:
 	MyProgram():Program(),
 				cursorX(3),
-				cursorY(3)
+				cursorY(3),
+				mycolor(COLOR_WHITE)
 	{
 		for (int i=0; i<gr; i++)
 			for (int j=0; j<gr; j++)
@@ -78,13 +102,27 @@ public:
 	void redrawBoard() {
 		for (int r=0; r<gr; r++)
 			for (int c=0; c<gr; c++)
-				drawChip(r, c, board[r][c]);
+				drawChip(r, c, board[c][r]);
 		drawCursor(cursorY, cursorX, BLACK);
 		display.display();
 	}
 	
+	bool mkTurn() {
+		GAME_TURN turn = {mycolor, cursorX, cursorY};
+		if (validate_turn(board, &turn) == E_OK) {
+			make_turn(board, &turn);
+			mycolor = ALTER_COLOR(mycolor);
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	/* we just have to redefine event handler */
 	virtual void handleEvent(Event event) override {
+		if (game_is_over(board))
+			return;
+
 		int dx=0, dy=0;
 		switch (event) {
 		case Event::EV_KEY_LEFT:
@@ -100,8 +138,8 @@ public:
 			dy = 1;
 			break;
 		case Event::EV_KEY_ENTER:
-			board[cursorY][cursorX]++;
-			board[cursorY][cursorX] %= 3;
+			if (!mkTurn())
+				return;
 			break;
 		default:
 			return;

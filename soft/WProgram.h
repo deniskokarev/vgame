@@ -7,7 +7,7 @@ typedef bool boolean;
 typedef char* __FlashStringHelper;
 
 struct Print {
-	virtual void write(uint8_t);
+	virtual void write(uint8_t) = 0;
 	void print(const char *s) {
 		while (*s)
 			write(*s++);
