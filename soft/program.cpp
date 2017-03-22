@@ -51,9 +51,13 @@ EventQueue events(q, dim(q));
 /* the global singleton program for execution */
 static Program *main_program;
 
+void Program::setMainProgram(Program *p) {
+	main_program = p;
+}
+
 /* merely declare your Program object to register it as main program */
-Program::Program():display(hspi1, dc, cs, rst) {
-	main_program = this;
+Program::Program():display(hspi1, dc, cs, rst),refresh(1) {
+	setMainProgram(this);
 }
 
 /* typical program initialization */
@@ -120,11 +124,21 @@ void Program::execute() {
 
 	while (true) {
 		Event event = events.get();
-		if (event != Event::EV_NONE)
-			handleEvent(event);
-		else
-			sleepSleep(1);
+		switch(event) {
+		case Event::EV_NONE:
+			sleepSleep(refresh);
+			break;
+		default:
+			Event he = handleEvent(event);
+			if (he == Event::EV_CLOSE)
+				return;	// for example if main_program changed
+		}
 	}
+}
+
+/* when need to change sleep cycle */
+void Program::setRefresh(int r) {
+	refresh = r;
 }
 
 extern "C" {
@@ -159,7 +173,8 @@ void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc) {
  * Entry point from main.c
  */
 void exec() {
-	main_program->execute();
+	while(true)
+		main_program->execute();
 }
 
 /* list of dummy objects to make c++ happy */
