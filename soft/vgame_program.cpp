@@ -35,11 +35,42 @@ protected:
 
 protected:
 	class StartWindow: public MyWindow {
+	protected:
+		char *label; // cannot be const due to stupid Adafruit lib
+		Adafruit_GFX_Button startButton;
 	public:
+		StartWindow():MyWindow(),label((char*)"START") {
+			int16_t x, y;
+			uint16_t w, h;
+			program.display.getTextBounds(label, 0, 0, &x, &y, &w, &h);
+			startButton.initButton(&program.display,
+								   program.display.width()/2,
+								   program.display.height()/4*3,
+								   w+8,
+								   h+4,
+								   1,
+								   0,
+								   BLACK,
+								   label,
+								   1);
+		}
 		virtual Event handleEvent(Event event) override {
+			switch(event) {
+			case Event::EV_KEY_ENTER:
+				startButton.drawButton(true);
+				program.display.display();
+				HAL_Delay(300);
+				program.setMainWindow(&program.gameWindow);
+				break;
+			default:
+				break;
+			}
 			return Event::EV_NONE;
 		}
 		virtual void draw() override {
+			program.display.print("Reversy v0.8");
+			startButton.drawButton();
+			program.display.display();
 		};
 	};
 
@@ -82,6 +113,7 @@ protected:
 		}
 
 		void redrawBoard() {
+			drawGrid();
 			for (int r=0; r<gr; r++)
 				for (int c=0; c<gr; c++)
 					drawChip(r, c, program.board[c][r]);
@@ -102,7 +134,8 @@ protected:
 
 	public:
 		virtual void draw() override {
-			drawGrid();
+			program.display.clearDisplay();
+			redrawBoard();
 		};
 		virtual Event handleEvent(Event event) override {
 			Event rc = Event::EV_NONE;
@@ -201,13 +234,13 @@ public:
 		board[gr/2][gr/2] = COLOR_WHITE;
 		board[gr/2-1][gr/2] = COLOR_BLACK;
 		board[gr/2][gr/2-1] = COLOR_BLACK;
-		mainWindow = &gameWindow;
+		mainWindow = &startWindow;
 	}
 
 	virtual void init() override {
 		Program::init();
 		display.clearDisplay();
-		setMainWindow(&gameWindow);
+		mainWindow->draw();
 	}
 
 	void setMainWindow(MyWindow *w) {
