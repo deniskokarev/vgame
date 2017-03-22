@@ -14,9 +14,8 @@ please support Adafruit and open-source hardware by purchasing
 products from Adafruit!
 
 Written by Limor Fried/Ladyada  for Adafruit Industries.  
-Augmented to work with HAL by Denis Kokarev
 BSD license, check license.txt for more information
-All text above, and the splash screen must be included in any redistribution
+Augmented to work with STM32 HAL by Denis Kokarev
 *********************************************************************/
 #ifndef _ADAFRUIT_PCD8544_HAL_H
 #define _ADAFRUIT_PCD8544_HAL_H
