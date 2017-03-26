@@ -153,9 +153,18 @@ protected:
 			if (validate_turn(program.board, &turn) == E_OK) {
 				make_turn(program.board, &turn);
 				redrawBoard();
+				GAME_TURN availableTurns[gr*gr];
 				GAME_TURN machineTurn;
-				find_best_turn(&machineTurn, program.board, ALTER_COLOR(program.mycolor), 5);
-				make_turn(program.board, &machineTurn);
+				int n;
+				while ((n=make_turn_list(availableTurns, program.board, ALTER_COLOR(program.mycolor)))>0) {
+					find_best_turn(&machineTurn, program.board, ALTER_COLOR(program.mycolor), 5);
+					make_turn(program.board, &machineTurn);
+					if ((n=make_turn_list(availableTurns, program.board, program.mycolor))>0)
+						break;
+					redrawBoard();
+				}
+				if (n<=0)
+					program.gameIsOver = true;
 				return true;
 			} else {
 				return false;
@@ -169,9 +178,6 @@ protected:
 		};
 		virtual Event handleEvent(Event event) override {
 			Event rc = Event::EV_NONE;
-			if (game_is_over(program.board))
-				return rc;
-
 			int dx=0, dy=0;
 			switch (event) {
 			case Event::EV_KEY_LEFT:
@@ -193,6 +199,12 @@ protected:
 			default:
 				return rc;
 			}
+			if (program.gameIsOver) {
+				HAL_Delay(3000);
+				program.againWindow.updateMessage();
+				program.setMainWindow(&program.againWindow);
+				return rc;
+			}
 			if ((dx != 0 || dy != 0) &&
 				program.cursorX+dx >= 0 && program.cursorX+dx < gr &&
 				program.cursorY+dy >= 0 && program.cursorY+dy < gr)
@@ -206,27 +218,65 @@ protected:
 		}
 	};
 
-	class ThinkWindow: public MyWindow {
-	public:
-		virtual Event handleEvent(Event event) override {
-			return Event::EV_NONE;
-		}
-		virtual void draw() override {
-		};
-	};
-
 	class AgainWindow: public MyWindow {
+	protected:
+		const char *message;
+		char *label; // cannot be const due to stupid Adafruit lib
+		Adafruit_GFX_Button againButton;
 	public:
+		AgainWindow():MyWindow(),message((char*)""),label((char*)"Again") {
+			int16_t x, y;
+			uint16_t w, h;
+			program.display.getTextBounds(label, 0, 0, &x, &y, &w, &h);
+			againButton.initButton(&program.display,
+								   program.display.width()/2,
+								   program.display.height()/4*3,
+								   w+8,
+								   h+4,
+								   1,
+								   0,
+								   BLACK,
+								   label,
+								   1);
+		}
 		virtual Event handleEvent(Event event) override {
+			switch(event) {
+			case Event::EV_KEY_ENTER:
+				againButton.drawButton(true);
+				program.display.display();
+				HAL_Delay(300);
+				program.startNewGame();
+				program.setMainWindow(&program.gameWindow);
+				break;
+			default:
+				break;
+			}
 			return Event::EV_NONE;
 		}
+		void updateMessage() {
+			int cnt[COLOR_BLACK+1];
+			for (int i=0; i<gr; i++)
+				for (int j=0; j<gr; j++)
+					cnt[program.board[i][j]]++;
+			if (cnt[COLOR_WHITE] > cnt[COLOR_BLACK])
+				message = "You WIN!!!";
+			else if (cnt[COLOR_WHITE] < cnt[COLOR_BLACK])
+				message = "You LOOSE!";
+			else
+				message = "!!!DRAW!!!";
+		}
 		virtual void draw() override {
+			program.display.clearDisplay();
+			program.display.setCursor(0, 0);
+			program.display.setTextColor(BLACK, WHITE);
+			program.display.print(message);
+			againButton.drawButton();
+			program.display.display();
 		};
 	};
 
 	StartWindow startWindow;
 	GameWindow gameWindow;
-	ThinkWindow thinkWindow;
 	AgainWindow againWindow;
 
 	MyWindow *mainWindow;
@@ -246,17 +296,33 @@ protected:
 	CHIP_COLOR mycolor;
 	
 	GAME_STATE board __attribute__ ((aligned (8)));
-	
+
+	bool gameIsOver;
 public:
 	MyProgram():Program(),
 				startWindow(),
 				gameWindow(),
-				thinkWindow(),
 				againWindow(),
 				cursorX(3),
 				cursorY(3),
 				mycolor(COLOR_WHITE)
 	{
+		mainWindow = &startWindow;
+	}
+
+	virtual void init() override {
+		Program::init();
+		startNewGame();
+		display.clearDisplay();
+		mainWindow->draw();
+	}
+
+	void startNewGame() {
+		cursorX = 3;
+		cursorY = 3;
+		mycolor = COLOR_WHITE;
+		gameIsOver = false;
+		#if 0
 		for (int i=0; i<gr; i++)
 			for (int j=0; j<gr; j++)
 				board[i][j] = COLOR_VACANT;
@@ -264,15 +330,20 @@ public:
 		board[gr/2][gr/2] = COLOR_WHITE;
 		board[gr/2-1][gr/2] = COLOR_BLACK;
 		board[gr/2][gr/2-1] = COLOR_BLACK;
-		mainWindow = &startWindow;
+		#else
+		int col = COLOR_WHITE;
+		for (int i=0; i<gr; i++) {
+			for (int j=0; j<gr; j++) {
+				board[i][j] = col;
+				col = ALTER_COLOR(col);
+			}
+		}
+		board[0][0] = COLOR_VACANT;
+		board[0][1] = COLOR_VACANT;
+		board[0][2] = COLOR_VACANT;
+		#endif
 	}
-
-	virtual void init() override {
-		Program::init();
-		display.clearDisplay();
-		mainWindow->draw();
-	}
-
+	
 	void setMainWindow(MyWindow *w) {
 		mainWindow = w;
 		mainWindow->draw();
