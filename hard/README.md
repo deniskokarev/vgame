@@ -3,4 +3,4 @@
 * vgame.dch - schematics
 * vgame.dip - PCB
 
-![Complete Device](https://github.com/deniskokarev/vgame/hard/blob/master/vgame.dch.png "Schematics")
+![Schematics](https://github.com/deniskokarev/vgame/blob/master/hard/vgame.dch.png "Schematics")
