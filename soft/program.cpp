@@ -55,7 +55,13 @@ void Program::setMainProgram(Program *p) {
 	main_program = p;
 }
 
-/* merely declare your Program object to register it as main program */
+/*
+ * Merely declare your Program object to register it as main program
+ * If you'll be declaring multiple programs the last constructed one
+ * will become main_program
+ * In that case, it would be a good idea to incapsulate all programs
+ * into a single global object to specify which one to be created last
+ */
 Program::Program():display(hspi1, dc, cs, rst),refresh(1) {
 	setMainProgram(this);
 }
