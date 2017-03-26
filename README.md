@@ -25,7 +25,7 @@ The current software is the Game of Reversy (Otello)
 
 The board is double-sided suitable for DIY and fits the LCD screen component "natively"
 
-![Complete Device](https://github.com/deniskokarev/vgame/blob/master/IMG_1202.jpg "Complete Device")
+![Complete Device](https://github.com/deniskokarev/vgame/blob/master/CompleteDevice.jpg "Complete Device")
 
 TODO:
 - Write more games
