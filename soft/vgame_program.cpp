@@ -1,7 +1,7 @@
 #include "program.h"
 
 extern "C" {
-#include "game.h"
+#include "minimax.h"
 }
 
 static char *
@@ -152,7 +152,10 @@ protected:
 			GAME_TURN turn = {program.mycolor, program.cursorX, program.cursorY};
 			if (validate_turn(program.board, &turn) == E_OK) {
 				make_turn(program.board, &turn);
-				program.mycolor = ALTER_COLOR(program.mycolor);
+				redrawBoard();
+				GAME_TURN machineTurn;
+				find_best_turn(&machineTurn, program.board, ALTER_COLOR(program.mycolor), 5);
+				make_turn(program.board, &machineTurn);
 				return true;
 			} else {
 				return false;

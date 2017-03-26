@@ -12,8 +12,8 @@ CHIP = STM32F334x8
 LDSCRIPT = STM32F334K8_FLASH.ld
 include ./cube3.mk
 
-CFLAGS += -IAdafruit-GFX-Library -Ireversy -Wall -std=c99 -Os -g
-CXXFLAGS += -IAdafruit-GFX-Library -Ireversy -Wall -std=c++11 -Os -g
+CFLAGS += -IAdafruit-GFX-Library -Ireversy -Wall -std=c99 -O3 -g
+CXXFLAGS += -IAdafruit-GFX-Library -Ireversy -Wall -std=c++11 -O3 -g
 LDFLAGS += -g
 
 # Binaries will be generated with this name (.elf, .bin, .hex, etc)
