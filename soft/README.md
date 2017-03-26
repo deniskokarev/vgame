@@ -16,8 +16,10 @@ program.cpp has higher user-level API to work on the given hardware
 vgame_program.cpp is the actual game code
 
 TODO:
-- setMainProgram() in the Program() consructor would be conflicting if we have had multiple global programs defined
+- add extensive comments
++ setMainProgram() in the Program() consructor would be conflicting if we have had multiple global programs defined
   actually in this case programs will have to be incapsulated into a global object with explicit creation order
 - rename sleep() methods
 - observe infinite refresh rate
 - pull void __cxa_pure_virtual(void) and __errno into cxx module
+- add color and difficulty selection to the startWindow

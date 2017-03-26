@@ -66,7 +66,7 @@ protected:
 			return Event::EV_NONE;
 		}
 		virtual void draw() override {
-			program.display.print("Reversy v0.8");
+			program.display.print("Reversy v0.9");
 			startButton.drawButton();
 			program.display.display();
 		};
@@ -261,7 +261,7 @@ protected:
 			if (cnt[COLOR_WHITE] > cnt[COLOR_BLACK])
 				message = "You WIN!!!";
 			else if (cnt[COLOR_WHITE] < cnt[COLOR_BLACK])
-				message = "You LOOSE!";
+				message = "You LOSE!!";
 			else
 				message = "!!!DRAW!!!";
 		}
@@ -322,7 +322,6 @@ public:
 		cursorY = 3;
 		mycolor = COLOR_WHITE;
 		gameIsOver = false;
-		#if 0
 		for (int i=0; i<gr; i++)
 			for (int j=0; j<gr; j++)
 				board[i][j] = COLOR_VACANT;
@@ -330,18 +329,6 @@ public:
 		board[gr/2][gr/2] = COLOR_WHITE;
 		board[gr/2-1][gr/2] = COLOR_BLACK;
 		board[gr/2][gr/2-1] = COLOR_BLACK;
-		#else
-		int col = COLOR_WHITE;
-		for (int i=0; i<gr; i++) {
-			for (int j=0; j<gr; j++) {
-				board[i][j] = col;
-				col = ALTER_COLOR(col);
-			}
-		}
-		board[0][0] = COLOR_VACANT;
-		board[0][1] = COLOR_VACANT;
-		board[0][2] = COLOR_VACANT;
-		#endif
 	}
 	
 	void setMainWindow(MyWindow *w) {

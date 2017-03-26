@@ -21,11 +21,11 @@ xterm -e st-util &		# spawn st-util on different console
 make debug
 ```
 
-The current software is just an adopted SparkFun demo
+The current software is the Game of Reversy (Otello)
 
 The board is double-sided suitable for DIY and fits the LCD screen component "natively"
 
 ![Complete Device](https://github.com/deniskokarev/vgame/blob/master/IMG_1202.jpg "Complete Device")
 
 TODO:
-- Write a game for it
+- Write more games
