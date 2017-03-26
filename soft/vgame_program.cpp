@@ -4,7 +4,6 @@ extern "C" {
 #include "game.h"
 }
 
-#if 0
 static char *
 lltoan(char *out, long long i, int n) {
 	char *p = out;
@@ -18,7 +17,6 @@ lltoan(char *out, long long i, int n) {
 	}
 	return(out + n);
 }
-#endif
 
 /*
  * A custom demo-program for our mini-console
@@ -76,7 +74,7 @@ protected:
 
 	class GameWindow: public MyWindow {
 	protected:
-		void drawChip(int r, int c, CHIP_COLOR color) {
+		void drawChip(int r, int c, CHIP_COLOR color, int &nWhite, int &nBlack) {
 			int px = xsz * c + 1;
 			int py = ysz * r + 1;
 			if (color == COLOR_VACANT) {
@@ -85,6 +83,14 @@ protected:
 						program.display.drawPixel(px+x, py+y, WHITE);
 			} else {
 				const unsigned char (&chip)[ysz-2][xsz-2] = (color == COLOR_WHITE)?whiteChip:blackChip;
+				switch (color) {
+				case COLOR_WHITE:
+					nWhite++;
+					break;
+				case COLOR_BLACK:
+					nBlack++;
+					break;
+				}
 				for (int y=0; y<ysz-2; y++)
 					for (int x=0; x<xsz-2; x++)
 						if (chip[y][x] != 0)
@@ -112,12 +118,33 @@ protected:
 			}
 		}
 
+		void drawScore(int nWhite, int nBlack) {
+			char sw[3];
+			char sb[3];
+			*(lltoan(sw, nWhite, 2)) = 0;
+			*(lltoan(sb, nBlack, 2)) = 0;
+			int16_t x, y;
+			uint16_t w, h;
+			program.display.getTextBounds(sw, 0, 0, &x, &y, &w, &h);
+			x = (gr*xsz)+(program.display.width()-(gr*xsz)-w)/2;
+			y = (program.display.height()-h*3)/2;
+			program.display.setCursor(x, y);
+			program.display.setTextColor(BLACK, WHITE);
+			program.display.print(sw);
+			program.display.setCursor(x, y+2*h);
+			program.display.setTextColor(WHITE, BLACK);
+			program.display.print(sb);
+		}
+		
 		void redrawBoard() {
 			drawGrid();
+			int nWhite = 0;
+			int nBlack = 0;
 			for (int r=0; r<gr; r++)
 				for (int c=0; c<gr; c++)
-					drawChip(r, c, program.board[c][r]);
+					drawChip(r, c, program.board[c][r], nWhite, nBlack);
 			drawCursor(program.cursorY, program.cursorX, BLACK);
+			drawScore(nWhite, nBlack);
 			program.display.display();
 		}
 
