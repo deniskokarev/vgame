@@ -1,5 +1,7 @@
 #include "program.h"
 
+#include <setjmp.h>
+
 extern "C" {
 #include "minimax.h"
 }
@@ -156,12 +158,16 @@ protected:
 				GAME_TURN availableTurns[gr*gr];
 				GAME_TURN machineTurn;
 				int n;
-				while ((n=make_turn_list(availableTurns, program.board, ALTER_COLOR(program.mycolor)))>0) {
-					find_best_turn(&machineTurn, program.board, ALTER_COLOR(program.mycolor), 5);
-					make_turn(program.board, &machineTurn);
-					if ((n=make_turn_list(availableTurns, program.board, program.mycolor))>0)
-						break;
-					redrawBoard();
+				jmp_buf env;
+				if (setjmp(env) != 0) {
+					while ((n=make_turn_list(availableTurns, program.board, ALTER_COLOR(program.mycolor)))>0) {
+						find_best_turn(&machineTurn, program.board, ALTER_COLOR(program.mycolor), 5);
+						make_turn(program.board, &machineTurn);
+						if ((n=make_turn_list(availableTurns, program.board, program.mycolor))>0)
+							break;
+						redrawBoard();
+					}
+				} else {
 				}
 				if (n<=0)
 					program.gameIsOver = true;

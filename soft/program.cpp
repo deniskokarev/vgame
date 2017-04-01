@@ -15,18 +15,29 @@
  * all of these must match the CubeMX initialized PINs
  * the SPI handle is expected to be named hspi1
  */
-const static Adafruit_PCD8544_HAL_Pin dc {GPIOB, GPIO_PIN_7};
-const static Adafruit_PCD8544_HAL_Pin cs {GPIOB, GPIO_PIN_6};
-const static Adafruit_PCD8544_HAL_Pin rst {GPIOA, GPIO_PIN_15};
+const static STM_HAL_Pin dc {GPIOB, GPIO_PIN_7};
+const static STM_HAL_Pin cs {GPIOB, GPIO_PIN_6};
+const static STM_HAL_Pin rst {GPIOA, GPIO_PIN_15};
 
+class RingbufQueue: public EventQueue {
+protected:
+	Event *q;
+	int sz;
+	int h, t;
+public:
+	RingbufQueue(Event *_q, int _sz);
+	virtual Event get() override;
+	virtual void put(Event e) override;
+};
+	
 /*
  * Event queue ring buffer
  */
-EventQueue::EventQueue(Event *_q, int _sz):q(_q),sz(_sz){
+RingbufQueue::RingbufQueue(Event *_q, int _sz):q(_q),sz(_sz){
 	h = t = 0;
 };
 
-Event EventQueue::get() {
+Event RingbufQueue::get() {
 	if (t != h) {
 		Event rc = q[h];
 		h = (h+1) % sz;
@@ -36,7 +47,7 @@ Event EventQueue::get() {
 	}
 }
 
-void EventQueue::put(Event e) {
+void RingbufQueue::put(Event e) {
 	int nt = (t+1) % sz;
 	if (nt != h) {
 		q[t] = e;
@@ -46,7 +57,9 @@ void EventQueue::put(Event e) {
 
 /* our events queue */
 static Event q[16];
-EventQueue events(q, dim(q));
+RingbufQueue rbevents(q, dim(q));
+
+EventQueue *events = &rbevents;
 
 /* the global singleton program for execution */
 static Program *main_program;
@@ -129,7 +142,7 @@ void Program::execute() {
 	init();
 
 	while (true) {
-		Event event = events.get();
+		Event event = events->get();
 		switch(event) {
 		case Event::EV_NONE:
 			sleepSleep(refresh);
@@ -153,26 +166,26 @@ extern "C" {
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	switch (GPIO_Pin) {
 	case GPIO_PIN_3:
-		events.put(Event::EV_KEY_DOWN);
+		events->put(Event::EV_KEY_DOWN);
 		break;
 	case GPIO_PIN_4:
-		events.put(Event::EV_KEY_RIGHT);
+		events->put(Event::EV_KEY_RIGHT);
 		break;
 	case GPIO_PIN_5:
-		events.put(Event::EV_KEY_ENTER);
+		events->put(Event::EV_KEY_ENTER);
 		break;
 	case GPIO_PIN_6:
-		events.put(Event::EV_KEY_LEFT);
+		events->put(Event::EV_KEY_LEFT);
 		break;
 	case GPIO_PIN_7:
-		events.put(Event::EV_KEY_UP);
+		events->put(Event::EV_KEY_UP);
 		break;
 	}
 }
 
 /* RTC wakeup IRQ handler */
 void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc) {
-	events.put(Event::EV_TIMER);
+	events->put(Event::EV_TIMER);
 }
 
 /*
@@ -182,19 +195,5 @@ void exec() {
 	while(true)
 		main_program->execute();
 }
-
-/* list of dummy objects to make c++ happy */
-
-/*
- * we're better with declaring this stub explicitly
- * otherwise c++ wants to link `abort()` with whole 9 yards
- * bloating the code by 50K
- */
-void __cxa_pure_virtual(void) {};
-
-/*
- * some math functions need errno
- */
-int __errno;
 
 }

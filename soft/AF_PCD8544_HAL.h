@@ -17,8 +17,8 @@ Written by Limor Fried/Ladyada  for Adafruit Industries.
 BSD license, check license.txt for more information
 Augmented to work with STM32 HAL by Denis Kokarev
 *********************************************************************/
-#ifndef _ADAFRUIT_PCD8544_HAL_H
-#define _ADAFRUIT_PCD8544_HAL_H
+#ifndef _AF_PCD8544_HAL_H
+#define _AF_PCD8544_HAL_H
 
 #include "Adafruit_GFX.h"
 #include "stm32f3xx_hal.h"
@@ -49,18 +49,18 @@ Augmented to work with STM32 HAL by Denis Kokarev
 #define PCD8544_SETBIAS 0x10
 #define PCD8544_SETVOP 0x80
 
-struct Adafruit_PCD8544_HAL_Pin {
+struct STM_HAL_Pin {
 	GPIO_TypeDef* base;
 	uint16_t pin;
 };
 
-class Adafruit_PCD8544_HAL : public Adafruit_GFX {
+class AF_PCD8544_HAL : public Adafruit_GFX {
  public:
   // SPI and all pins should already be initialized at the moment of screen construction 
-  Adafruit_PCD8544_HAL(SPI_HandleTypeDef &hspi,
-					   const Adafruit_PCD8544_HAL_Pin &dc,
-					   const Adafruit_PCD8544_HAL_Pin &cs,
-					   const Adafruit_PCD8544_HAL_Pin &rst
+  AF_PCD8544_HAL(SPI_HandleTypeDef &hspi,
+					   const STM_HAL_Pin &dc,
+					   const STM_HAL_Pin &cs,
+					   const STM_HAL_Pin &rst
 					   );
 
   void begin(uint8_t contrast = 60, uint8_t bias = 0x04);
@@ -81,9 +81,9 @@ class Adafruit_PCD8544_HAL : public Adafruit_GFX {
 	  DATA = 1
   };
   SPI_HandleTypeDef &_hspi;
-  const Adafruit_PCD8544_HAL_Pin &_dc;
-  const Adafruit_PCD8544_HAL_Pin &_cs;
-  const Adafruit_PCD8544_HAL_Pin &_rst;
+  const STM_HAL_Pin &_dc;
+  const STM_HAL_Pin &_cs;
+  const STM_HAL_Pin &_rst;
   uint8_t pcd8544_buffer[LCDWIDTH * LCDHEIGHT / 8];
   uint8_t mode;
 };

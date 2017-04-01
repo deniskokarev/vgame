@@ -7,7 +7,7 @@
 
 #include <cstdint>
 #include "exec.h"
-#include "Adafruit_PCD8544_HAL.h"
+#include "AF_PCD8544_HAL.h"
 
 enum class Event: std::int8_t {
 	EV_NONE = 0,
@@ -21,20 +21,15 @@ enum class Event: std::int8_t {
 	EV_CUSTOM
 };
 
-/* Event queue ring buffer */
+/* Event queue */
 class EventQueue {
-protected:
-	Event *q;
-	int sz;
-	int h, t;
 public:
-	EventQueue(Event *_q, int _sz);
-	Event get();
-	void put(Event e);
+	virtual Event get() = 0;
+	virtual void put(Event e) = 0;
 };
 
 /* global events queue */
-extern EventQueue events;
+extern EventQueue *events;
 
 class EventHandler {
 public:
@@ -47,7 +42,7 @@ public:
 /* master program class to be redefined */
 class Program: public EventHandler {
 protected:
-	Adafruit_PCD8544_HAL display;
+	AF_PCD8544_HAL display;
 	int refresh;
 	Program();
 public:

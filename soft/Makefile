@@ -19,7 +19,7 @@ LDFLAGS += -g
 # Binaries will be generated with this name (.elf, .bin, .hex, etc)
 PROJ_NAME = vgame
 SRC = $(wildcard Src/*.c)
-INC = $(wildcard Inc/*.h) reversy/game.h reversy/minimax.h Adafruit_PCD8544_HAL.h program.h
+INC = $(wildcard Inc/*.h) reversy/game.h reversy/minimax.h AF_PCD8544_HAL.h program.h
 OBJS = \
 	$(SRC:%.c=%.o) \
 	$(STARTUPOBJ) \
@@ -27,11 +27,12 @@ OBJS = \
 	Adafruit-GFX-Library/glcdfont.o \
 	reversy/game.o \
 	reversy/minimax.o \
-	Adafruit_PCD8544_HAL.o \
+	AF_PCD8544_HAL.o \
 	program.o \
-	vgame_program.o
+	cxx.o \
+	reversy_program.o
 
-Adafruit_PCD8544_HAL.o: $(INC)
+AF_PCD8544_HAL.o: $(INC)
 program.o: $(INC)
 vgame_program.o: $(INC)
 

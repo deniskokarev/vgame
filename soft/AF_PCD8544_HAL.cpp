@@ -18,14 +18,14 @@ Augmented to work with STM32 HAL by Denis Kokarev
 
 #include <cstdlib>
 
-#include "Adafruit_PCD8544_HAL.h"
+#include "AF_PCD8544_HAL.h"
 #include "stm32f3xx_hal.h"
 
 #define	LOW		GPIO_PIN_RESET
 #define	HIGH	GPIO_PIN_SET
 
 
-static void digitalWrite(const Adafruit_PCD8544_HAL_Pin &pin, GPIO_PinState val) {
+static void digitalWrite(const STM_HAL_Pin &pin, GPIO_PinState val) {
 	HAL_GPIO_WritePin(pin.base, pin.pin, val);
 }
 
@@ -33,10 +33,10 @@ static void digitalWrite(const Adafruit_PCD8544_HAL_Pin &pin, GPIO_PinState val)
   #define _BV(bit) (1<<(bit))
 #endif
 
-Adafruit_PCD8544_HAL::Adafruit_PCD8544_HAL(SPI_HandleTypeDef &hspi,
-										   const Adafruit_PCD8544_HAL_Pin &dc,
-										   const Adafruit_PCD8544_HAL_Pin &cs,
-										   const Adafruit_PCD8544_HAL_Pin &rst
+AF_PCD8544_HAL::AF_PCD8544_HAL(SPI_HandleTypeDef &hspi,
+										   const STM_HAL_Pin &dc,
+										   const STM_HAL_Pin &cs,
+										   const STM_HAL_Pin &rst
 										   ):
 	Adafruit_GFX(LCDWIDTH, LCDHEIGHT),
 	_hspi(hspi),
@@ -48,7 +48,7 @@ Adafruit_PCD8544_HAL::Adafruit_PCD8544_HAL(SPI_HandleTypeDef &hspi,
 
 
 // the most basic function, set a single pixel
-void Adafruit_PCD8544_HAL::drawPixel(int16_t x, int16_t y, uint16_t color) {
+void AF_PCD8544_HAL::drawPixel(int16_t x, int16_t y, uint16_t color) {
   if ((x < 0) || (x >= _width) || (y < 0) || (y >= _height))
     return;
 
@@ -83,7 +83,7 @@ void Adafruit_PCD8544_HAL::drawPixel(int16_t x, int16_t y, uint16_t color) {
 
 
 // the most basic function, get a single pixel
-uint8_t Adafruit_PCD8544_HAL::getPixel(int8_t x, int8_t y) {
+uint8_t AF_PCD8544_HAL::getPixel(int8_t x, int8_t y) {
   if ((x < 0) || (x >= LCDWIDTH) || (y < 0) || (y >= LCDHEIGHT))
     return 0;
 
@@ -91,7 +91,7 @@ uint8_t Adafruit_PCD8544_HAL::getPixel(int8_t x, int8_t y) {
 }
 
 
-void Adafruit_PCD8544_HAL::begin(uint8_t contrast, uint8_t bias) {
+void AF_PCD8544_HAL::begin(uint8_t contrast, uint8_t bias) {
   digitalWrite(_rst, LOW);
   HAL_Delay(250);
   digitalWrite(_rst, HIGH);
@@ -123,7 +123,7 @@ void Adafruit_PCD8544_HAL::begin(uint8_t contrast, uint8_t bias) {
 }
 
 
-inline void Adafruit_PCD8544_HAL::data(uint8_t *p, uint16_t sz) {
+inline void AF_PCD8544_HAL::data(uint8_t *p, uint16_t sz) {
     // Hardware SPI write.
 	if (mode != DATA) {
 		while(HAL_SPI_GetState(&_hspi) != HAL_SPI_STATE_READY) {
@@ -136,7 +136,7 @@ inline void Adafruit_PCD8544_HAL::data(uint8_t *p, uint16_t sz) {
 	}
 }
 
-void Adafruit_PCD8544_HAL::command(uint8_t c) {
+void AF_PCD8544_HAL::command(uint8_t c) {
 	if (mode != COMMAND) {
 		while(HAL_SPI_GetState(&_hspi) != HAL_SPI_STATE_READY) {
 		}
@@ -146,7 +146,7 @@ void Adafruit_PCD8544_HAL::command(uint8_t c) {
 	HAL_SPI_Transmit(&_hspi, &c, 1, 0);
 }
 
-void Adafruit_PCD8544_HAL::setContrast(uint8_t val) {
+void AF_PCD8544_HAL::setContrast(uint8_t val) {
   if (val > 0x7f) {
     val = 0x7f;
   }
@@ -157,7 +157,7 @@ void Adafruit_PCD8544_HAL::setContrast(uint8_t val) {
 
 
 
-void Adafruit_PCD8544_HAL::display(void) {
+void AF_PCD8544_HAL::display(void) {
   
 	digitalWrite(_cs, LOW);
   
@@ -170,7 +170,7 @@ void Adafruit_PCD8544_HAL::display(void) {
 }
 
 // clear everything
-void Adafruit_PCD8544_HAL::clearDisplay(void) {
+void AF_PCD8544_HAL::clearDisplay(void) {
   memset(pcd8544_buffer, 0, LCDWIDTH*LCDHEIGHT/8);
   cursor_y = cursor_x = 0;
 }
