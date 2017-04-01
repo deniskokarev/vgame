@@ -24,13 +24,11 @@ lltoan(char *out, long long i, int n) {
  * A custom demo-program for our mini-console
  */
 
-class MyProgram: public Program {
+class MyProgram: public WProgram {
 protected:
-	class MyWindow: public EventHandler {
+	class MyWindow: public Window {
 	protected:
 		static MyProgram &program;
-	public:
-		virtual void draw() = 0;
 	};
 
 protected:
@@ -305,7 +303,7 @@ protected:
 
 	bool gameIsOver;
 public:
-	MyProgram():Program(),
+	MyProgram():WProgram(),
 				startWindow(),
 				gameWindow(),
 				againWindow(),
@@ -337,15 +335,6 @@ public:
 		board[gr/2][gr/2-1] = COLOR_BLACK;
 	}
 	
-	void setMainWindow(MyWindow *w) {
-		mainWindow = w;
-		mainWindow->draw();
-	}
-
-	/* we just have to redefine event handler */
-	virtual Event handleEvent(Event event) override {
-		return mainWindow->handleEvent(event);
-	}
 };
 
 const unsigned char MyProgram::whiteChip[ysz-2][xsz-2] = {

@@ -61,3 +61,16 @@ public:
 	/* entry point from C code */
 	friend void ::exec();
 };
+
+class Window: public EventHandler {
+public:
+	virtual void draw() = 0;
+};
+
+class WProgram: public Program {
+protected:
+	Window *mainWindow;
+public:
+	void setMainWindow(Window *w);
+	virtual Event handleEvent(Event event) override;
+};

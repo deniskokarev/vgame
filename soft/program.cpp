@@ -3,13 +3,9 @@
  */
 
 #include "program.h"
-
 #include "gpio.h"
-#include "dma.h"
-#include "spi.h"
+#include "spi.h"	// has hspi1
 #include "rtc.h"
-
-#define dim(X)	(sizeof(X)/sizeof(X[0]))
 
 /*
  * all of these must match the CubeMX initialized PINs
@@ -19,47 +15,45 @@ const static STM_HAL_Pin dc {GPIOB, GPIO_PIN_7};
 const static STM_HAL_Pin cs {GPIOB, GPIO_PIN_6};
 const static STM_HAL_Pin rst {GPIOA, GPIO_PIN_15};
 
+/*** Events Queue *************************************/
+
+/*
+ * Our event queue is ring buffer
+ */
 class RingbufQueue: public EventQueue {
 protected:
 	Event *q;
 	int sz;
 	int h, t;
 public:
-	RingbufQueue(Event *_q, int _sz);
-	virtual Event get() override;
-	virtual void put(Event e) override;
-};
-	
-/*
- * Event queue ring buffer
- */
-RingbufQueue::RingbufQueue(Event *_q, int _sz):q(_q),sz(_sz){
-	h = t = 0;
-};
-
-Event RingbufQueue::get() {
-	if (t != h) {
-		Event rc = q[h];
-		h = (h+1) % sz;
-		return rc;
-	} else {
-		return Event::EV_NONE;
+	RingbufQueue(Event *_q, int _sz):q(_q),sz(_sz),h(0),t(0) {
 	}
-}
-
-void RingbufQueue::put(Event e) {
-	int nt = (t+1) % sz;
-	if (nt != h) {
-		q[t] = e;
-		t = nt;
-	} // otherwise just ignore
-}
+	virtual Event get() override {
+		if (t != h) {
+			Event rc = q[h];
+			h = (h+1) % sz;
+			return rc;
+		} else {
+			return Event::EV_NONE;
+		}
+	}
+	virtual void put(Event e) override {
+		int nt = (t+1) % sz;
+		if (nt != h) {
+			q[t] = e;
+			t = nt;
+		} // otherwise just ignore
+	}
+};
 
 /* our events queue */
-static Event q[16];
-RingbufQueue rbevents(q, dim(q));
-
+constexpr int EQ_SZ = 16;
+static Event q[EQ_SZ];
+RingbufQueue rbevents(q, EQ_SZ);
 EventQueue *events = &rbevents;
+
+/*** Program ******************************************/
+
 
 /* the global singleton program for execution */
 static Program *main_program;
@@ -160,40 +154,54 @@ void Program::setRefresh(int r) {
 	refresh = r;
 }
 
+/*** WProgram *****************************************/
+
+void WProgram::setMainWindow(Window *w) {
+	mainWindow = w;
+	mainWindow->draw();
+}
+
+/* we just have to redefine event handler */
+Event WProgram::handleEvent(Event event) {
+	return mainWindow->handleEvent(event);
+}
+
+/*** Hooks to HAL C code ******************************/
+
 extern "C" {
 
-/* Buttons IRQ handler */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-	switch (GPIO_Pin) {
-	case GPIO_PIN_3:
-		events->put(Event::EV_KEY_DOWN);
-		break;
-	case GPIO_PIN_4:
-		events->put(Event::EV_KEY_RIGHT);
-		break;
-	case GPIO_PIN_5:
-		events->put(Event::EV_KEY_ENTER);
-		break;
-	case GPIO_PIN_6:
-		events->put(Event::EV_KEY_LEFT);
-		break;
-	case GPIO_PIN_7:
-		events->put(Event::EV_KEY_UP);
-		break;
+	/* Buttons IRQ handler */
+	void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+		switch (GPIO_Pin) {
+		case GPIO_PIN_3:
+			events->put(Event::EV_KEY_DOWN);
+			break;
+		case GPIO_PIN_4:
+			events->put(Event::EV_KEY_RIGHT);
+			break;
+		case GPIO_PIN_5:
+			events->put(Event::EV_KEY_ENTER);
+			break;
+		case GPIO_PIN_6:
+			events->put(Event::EV_KEY_LEFT);
+			break;
+		case GPIO_PIN_7:
+			events->put(Event::EV_KEY_UP);
+			break;
+		}
 	}
-}
 
-/* RTC wakeup IRQ handler */
-void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc) {
-	events->put(Event::EV_TIMER);
-}
+	/* RTC wakeup IRQ handler */
+	void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc) {
+		events->put(Event::EV_TIMER);
+	}
 
-/*
- * Entry point from main.c
- */
-void exec() {
-	while(true)
-		main_program->execute();
-}
+	/*
+	 * Entry point from main.c
+	 */
+	void exec() {
+		while(true)
+			main_program->execute();
+	}
 
 }
