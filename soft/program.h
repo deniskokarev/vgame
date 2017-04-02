@@ -8,6 +8,7 @@
 #include <cstdint>
 #include "exec.h"
 #include "AF_PCD8544_HAL.h"
+#include <type_traits>
 
 enum class Event: std::int8_t {
 	EV_NONE = 0,
@@ -18,8 +19,21 @@ enum class Event: std::int8_t {
 	EV_KEY_DOWN,
 	EV_KEY_RIGHT,
 	EV_KEY_ENTER,
-	EV_CUSTOM
+	EV_CUSTOM,
+	__EV_CUSTOM_1,
+	__EV_CUSTOM_2,
+	__EV_CUSTOM_3,
+	__EV_CUSTOM_4,
+	__EV_CUSTOM_5,
+	__EV_CUSTOM_6,
+	__EV_CUSTOM_7,
+	__EV_CUSTOM_8,
 };
+
+/* to use custom event codes in the form of EV_CUSTOM+1, EV_CUSTOM+2, etc */
+constexpr Event operator+(const Event& x, int n) {
+	return (Event)(std::underlying_type<Event>::type(x) + n);
+}
 
 /* Event queue */
 class EventQueue {

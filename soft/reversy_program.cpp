@@ -1,7 +1,5 @@
 #include "program.h"
 
-#include <setjmp.h>
-
 extern "C" {
 #include "minimax.h"
 }
@@ -21,9 +19,8 @@ lltoan(char *out, long long i, int n) {
 }
 
 /*
- * A custom demo-program for our mini-console
+ * A game of reversy for our mini-console
  */
-
 class MyProgram: public WProgram {
 protected:
 	class MyWindow: public Window {
@@ -75,24 +72,24 @@ protected:
 	class GameWindow: public MyWindow {
 	protected:
 		void drawChip(int r, int c, CHIP_COLOR color, int &nWhite, int &nBlack) {
-			int px = xsz * c + 1;
-			int py = ysz * r + 1;
+			int px = cell_xsz * c + 1;
+			int py = cell_ysz * r + 1;
 			if (color == COLOR_VACANT) {
-				for (int y=0; y<ysz-2; y++)
-					for (int x=0; x<xsz-2; x++)
+				for (int y=0; y<cell_ysz-2; y++)
+					for (int x=0; x<cell_xsz-2; x++)
 						program.display.drawPixel(px+x, py+y, WHITE);
 			} else {
-				const unsigned char (&chip)[ysz-2][xsz-2] = (color == COLOR_WHITE)?whiteChip:blackChip;
+				const unsigned char (&chip)[cell_ysz-2][cell_xsz-2] = (color == COLOR_POS)?whiteChip:blackChip;
 				switch (color) {
-				case COLOR_WHITE:
+				case COLOR_POS:
 					nWhite++;
 					break;
-				case COLOR_BLACK:
+				case COLOR_NEG:
 					nBlack++;
 					break;
 				}
-				for (int y=0; y<ysz-2; y++)
-					for (int x=0; x<xsz-2; x++)
+				for (int y=0; y<cell_ysz-2; y++)
+					for (int x=0; x<cell_xsz-2; x++)
 						if (chip[y][x] != 0)
 							program.display.drawPixel(px+x, py+y, BLACK);
 						else
@@ -101,20 +98,20 @@ protected:
 		}
 
 		void drawCursor(int r, int c, int color) {
-			int px = xsz * c;
-			int py = ysz * r;
-			program.display.drawLine(px, py, px+xsz-2, py, color);
-			program.display.drawLine(px, py+ysz-2, px+xsz-2, py+ysz-2, color);
-			program.display.drawLine(px, py, px, py+ysz-2, color);
-			program.display.drawLine(px+xsz-2, py, px+xsz-2, py+ysz-2, color);
+			int px = cell_xsz * c;
+			int py = cell_ysz * r;
+			program.display.drawLine(px, py, px+cell_xsz-2, py, color);
+			program.display.drawLine(px, py+cell_ysz-2, px+cell_xsz-2, py+cell_ysz-2, color);
+			program.display.drawLine(px, py, px, py+cell_ysz-2, color);
+			program.display.drawLine(px+cell_xsz-2, py, px+cell_xsz-2, py+cell_ysz-2, color);
 		}
 
 		void drawGrid() {
-			for (int n=0; n<gr-1; n++) {
-				int px = ysz*n+ysz-1;
-				int py = xsz*n+xsz-1;
-				program.display.drawLine(0, px, xl, px, BLACK);
-				program.display.drawLine(py, 0, py, yl, BLACK);
+			for (int n=0; n<board_dim-1; n++) {
+				int px = cell_ysz*n+cell_ysz-1;
+				int py = cell_xsz*n+cell_xsz-1;
+				program.display.drawLine(0, px, board_xsz, px, BLACK);
+				program.display.drawLine(py, 0, py, board_ysz, BLACK);
 			}
 		}
 
@@ -126,7 +123,7 @@ protected:
 			int16_t x, y;
 			uint16_t w, h;
 			program.display.getTextBounds(sw, 0, 0, &x, &y, &w, &h);
-			x = (gr*xsz)+(program.display.width()-(gr*xsz)-w)/2;
+			x = (board_dim*cell_xsz)+(program.display.width()-(board_dim*cell_xsz)-w)/2;
 			y = (program.display.height()-h*3)/2;
 			program.display.setCursor(x, y);
 			program.display.setTextColor(BLACK, WHITE);
@@ -140,9 +137,9 @@ protected:
 			drawGrid();
 			int nWhite = 0;
 			int nBlack = 0;
-			for (int r=0; r<gr; r++)
-				for (int c=0; c<gr; c++)
-					drawChip(r, c, program.board[c][r], nWhite, nBlack);
+			for (int r=0; r<board_dim; r++)
+				for (int c=0; c<board_dim; c++)
+					drawChip(r, c, program.board.b[c][r], nWhite, nBlack);
 			drawCursor(program.cursorY, program.cursorX, BLACK);
 			drawScore(nWhite, nBlack);
 			program.display.display();
@@ -150,22 +147,18 @@ protected:
 
 		bool mkTurn() {
 			GAME_TURN turn = {program.mycolor, program.cursorX, program.cursorY};
-			if (validate_turn(program.board, &turn) == E_OK) {
-				make_turn(program.board, &turn);
+			if (validate_turn(&program.board, &turn) == E_OK) {
+				make_turn(&program.board, &turn);
 				redrawBoard();
-				GAME_TURN availableTurns[gr*gr];
+				GAME_TURN availableTurns[board_dim*board_dim];
 				GAME_TURN machineTurn;
 				int n;
-				jmp_buf env;
-				if (setjmp(env) != 0) {
-					while ((n=make_turn_list(availableTurns, program.board, ALTER_COLOR(program.mycolor)))>0) {
-						find_best_turn(&machineTurn, program.board, ALTER_COLOR(program.mycolor), 5);
-						make_turn(program.board, &machineTurn);
-						if ((n=make_turn_list(availableTurns, program.board, program.mycolor))>0)
-							break;
-						redrawBoard();
-					}
-				} else {
+				while ((n=make_turn_list(availableTurns, &program.board, ALTER_COLOR(program.mycolor)))>0) {
+					find_best_turn(&machineTurn, &program.board, ALTER_COLOR(program.mycolor), program.level);
+					make_turn(&program.board, &machineTurn);
+					if ((n=make_turn_list(availableTurns, &program.board, program.mycolor))>0)
+						break;
+					redrawBoard();
 				}
 				if (n<=0)
 					program.gameIsOver = true;
@@ -210,8 +203,8 @@ protected:
 				return rc;
 			}
 			if ((dx != 0 || dy != 0) &&
-				program.cursorX+dx >= 0 && program.cursorX+dx < gr &&
-				program.cursorY+dy >= 0 && program.cursorY+dy < gr)
+				program.cursorX+dx >= 0 && program.cursorX+dx < board_dim &&
+				program.cursorY+dy >= 0 && program.cursorY+dy < board_dim)
 			{
 				drawCursor(program.cursorY, program.cursorX, WHITE);
 				program.cursorX += dx;
@@ -221,7 +214,30 @@ protected:
 			return rc;
 		}
 	};
-
+	
+	class TestGameWindow: public GameWindow {
+		virtual Event handleEvent(Event event) override {
+			if (event == Event::EV_CUSTOM+1) {
+				GAME_TURN availableTurns[board_dim*board_dim];
+				GAME_TURN machineTurn;
+				int n;
+				while ((n=make_turn_list(availableTurns, &program.board, program.mycolor))>0) {
+					find_best_turn(&machineTurn, &program.board, program.mycolor, program.level);
+					make_turn(&program.board, &machineTurn);
+					if ((n=make_turn_list(availableTurns, &program.board, ALTER_COLOR(program.mycolor)))>0)
+						break;
+					redrawBoard();
+				}
+				if (n<=0)
+					program.gameIsOver = true;
+				else
+					events->put(event);
+				program.mycolor = ALTER_COLOR(program.mycolor);
+			}
+			return GameWindow::handleEvent(event);
+		}
+	};
+	
 	class AgainWindow: public MyWindow {
 	protected:
 		const char *message;
@@ -258,13 +274,11 @@ protected:
 			return Event::EV_NONE;
 		}
 		void updateMessage() {
-			int cnt[COLOR_BLACK+1];
-			for (int i=0; i<gr; i++)
-				for (int j=0; j<gr; j++)
-					cnt[program.board[i][j]]++;
-			if (cnt[COLOR_WHITE] > cnt[COLOR_BLACK])
+			int cu = chips_count(&program.board, program.mycolor);
+			int cnu = chips_count(&program.board, ALTER_COLOR(program.mycolor));
+			if (cu > cnu)
 				message = "You WIN!!!";
-			else if (cnt[COLOR_WHITE] < cnt[COLOR_BLACK])
+			else if (cu < cnu)
 				message = "You LOSE!!";
 			else
 				message = "!!!DRAW!!!";
@@ -281,69 +295,71 @@ protected:
 
 	StartWindow startWindow;
 	GameWindow gameWindow;
+	TestGameWindow testGameWindow;
 	AgainWindow againWindow;
 
-	MyWindow *mainWindow;
-
 protected:
-	static constexpr int gr = MAX_DIM;
-	static constexpr int ysz = LCDHEIGHT/gr;
-	static constexpr int yl = ysz*gr-1;
-	static constexpr int xsz = ysz+1;
-	static constexpr int xl = xsz*gr-1;
-	static const unsigned char whiteChip[ysz-2][xsz-2];
-	static const unsigned char blackChip[ysz-2][xsz-2];
+	static constexpr int board_dim = MAX_DIM;
+	static constexpr int cell_ysz = LCDHEIGHT/board_dim;
+	static constexpr int board_ysz = cell_ysz*board_dim-1;
+	static constexpr int cell_xsz = cell_ysz+1;
+	static constexpr int board_xsz = cell_xsz*board_dim-1;
+	static const unsigned char whiteChip[cell_ysz-2][cell_xsz-2];
+	static const unsigned char blackChip[cell_ysz-2][cell_xsz-2];
 
-	int cursorX;
-	int cursorY;
+	GAME_STATE board;
+
+	signed char cursorX;
+	signed char cursorY;
 	
 	CHIP_COLOR mycolor;
 	
-	GAME_STATE board __attribute__ ((aligned (8)));
-
 	bool gameIsOver;
+	char level;
 public:
 	MyProgram():WProgram(),
 				startWindow(),
 				gameWindow(),
+				testGameWindow(),
 				againWindow(),
 				cursorX(3),
 				cursorY(3),
-				mycolor(COLOR_WHITE)
+				mycolor(COLOR_POS)
 	{
-		mainWindow = &startWindow;
 	}
 
 	virtual void init() override {
 		Program::init();
+		setMainWindow(&startWindow);
 		startNewGame();
 		display.clearDisplay();
 		mainWindow->draw();
+		level = 5;
 	}
 
 	void startNewGame() {
 		cursorX = 3;
 		cursorY = 3;
-		mycolor = COLOR_WHITE;
+		mycolor = COLOR_POS;
 		gameIsOver = false;
-		for (int i=0; i<gr; i++)
-			for (int j=0; j<gr; j++)
-				board[i][j] = COLOR_VACANT;
-		board[gr/2-1][gr/2-1] = COLOR_WHITE;
-		board[gr/2][gr/2] = COLOR_WHITE;
-		board[gr/2-1][gr/2] = COLOR_BLACK;
-		board[gr/2][gr/2-1] = COLOR_BLACK;
+		for (int i=0; i<board_dim; i++)
+			for (int j=0; j<board_dim; j++)
+				board.b[i][j] = COLOR_VACANT;
+		board.b[board_dim/2-1][board_dim/2-1] = COLOR_POS;
+		board.b[board_dim/2][board_dim/2] = COLOR_POS;
+		board.b[board_dim/2-1][board_dim/2] = COLOR_NEG;
+		board.b[board_dim/2][board_dim/2-1] = COLOR_NEG;
 	}
 	
 };
 
-const unsigned char MyProgram::whiteChip[ysz-2][xsz-2] = {
+const unsigned char MyProgram::whiteChip[cell_ysz-2][cell_xsz-2] = {
 	{0, 1, 1, 0},
 	{1, 0, 0, 1},
 	{0, 1, 1, 0},
 };
 
-const unsigned char MyProgram::blackChip[ysz-2][xsz-2] = {
+const unsigned char MyProgram::blackChip[cell_ysz-2][cell_xsz-2] = {
 	{0, 1, 1, 0},
 	{1, 1, 1, 1},
 	{0, 1, 1, 0},
