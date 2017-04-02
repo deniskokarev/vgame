@@ -44,6 +44,7 @@ $(PROJ_NAME).elf: $(OBJS) $(LIBBSP) $(LIBHAL)
 
 clean: cube_clean
 	rm -f *.o Src/*.o Adafruit-GFX-Library/*.o $(PROJ_NAME).elf $(PROJ_NAME).hex $(PROJ_NAME).bin
+	cd reversy && $(MAKE) clean
 
 # Flash the MC
 burn upload flash: $(PROJ_NAME).bin
