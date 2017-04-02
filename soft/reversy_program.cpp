@@ -1,5 +1,11 @@
 #include "program.h"
 
+/*
+ * enable if we want to start with the Autotest window
+ * useful for benchmarking and debugging
+ */ 
+//#define AUTOTEST
+
 extern "C" {
 #include "minimax.h"
 }
@@ -214,7 +220,8 @@ protected:
 			return rc;
 		}
 	};
-	
+
+#ifdef AUTOTEST
 	class TestGameWindow: public GameWindow {
 		virtual Event handleEvent(Event event) override {
 			if (event == Event::EV_CUSTOM+1) {
@@ -228,6 +235,7 @@ protected:
 						break;
 					redrawBoard();
 				}
+				redrawBoard();
 				if (n<=0)
 					program.gameIsOver = true;
 				else
@@ -237,6 +245,8 @@ protected:
 			return GameWindow::handleEvent(event);
 		}
 	};
+	TestGameWindow testGameWindow;
+#endif
 	
 	class AgainWindow: public MyWindow {
 	protected:
@@ -295,7 +305,6 @@ protected:
 
 	StartWindow startWindow;
 	GameWindow gameWindow;
-	TestGameWindow testGameWindow;
 	AgainWindow againWindow;
 
 protected:
@@ -318,10 +327,6 @@ protected:
 	char level;
 public:
 	MyProgram():WProgram(),
-				startWindow(),
-				gameWindow(),
-				testGameWindow(),
-				againWindow(),
 				cursorX(3),
 				cursorY(3),
 				mycolor(COLOR_POS)
@@ -330,7 +335,12 @@ public:
 
 	virtual void init() override {
 		Program::init();
+#ifdef AUTOTEST		
+		setMainWindow(&testGameWindow);
+		events->put(Event::EV_CUSTOM+1);
+#else
 		setMainWindow(&startWindow);
+#endif
 		startNewGame();
 		display.clearDisplay();
 		mainWindow->draw();
