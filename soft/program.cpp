@@ -31,8 +31,8 @@ protected:
 public:
 	/**
 	 * @brief initialize the RingBuffer on the predefined buffer
-	 * @param - event buffer location
-	 * @param - sz its size in number of events
+	 * @param _q - event buffer location
+	 * @param _sz - sz its size in number of events
 	 */
 	RingbufQueue(Event *_q, int _sz):q(_q),sz(_sz),h(0),t(0) {
 	}

@@ -1,6 +1,6 @@
 /**
  * @file
- * @breif Nokia LCD subclass for Adafruit GFX lib
+ * @brief Nokia LCD subclass for Adafruit GFX lib
  *
  * This is a library for our Monochrome Nokia 5110 LCD Displays
  * @author Limor Fried/Ladyada

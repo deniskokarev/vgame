@@ -129,7 +129,9 @@ public:
 	virtual void draw() = 0;
 };
 
-/** A container that has multiple window(s) and dispatches events to the main window */
+/**
+ * @brief A container that has multiple window(s) and dispatches events to the main window
+ */
 class WProgram: public Program {
 protected:
 	/** the window that is in the "focus" - i.e. handles all events */

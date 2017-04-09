@@ -21,8 +21,9 @@ reversy_program.cpp is the actual game code
 
 cxx.c necessary stubs to make c++ happy
 
+The code is commented in doxygen fashion, with `make doc` rule producing doxy directory with documentation
+
 TODO:
-- add extensive comments
 - rename sleep() methods
 - observe infinite refresh rate
 - add color and difficulty selection to the startWindow
