@@ -1,4 +1,4 @@
-#Game of Reversy formware for our mini-console
+# Game of Reversy formware for our mini-console
 
 Player vs computer mode.
 

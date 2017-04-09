@@ -1,4 +1,9 @@
-/* simple stub to make Adafruit GFX lib happy on STM32 */
+/**
+ * Simple stub to make Adafruit GFX lib happy on STM32 HAL
+ * necessary to mimic the basic Arduino IDE library the GFX
+ * depends on
+ * @author Denis Kokarev
+ */
 #include <cstdint>
 #include <cstring>
 #include <cstdlib>
@@ -6,6 +11,10 @@
 typedef bool boolean;
 typedef char* __FlashStringHelper;
 
+/**
+ * Arduino has a concept of Printer class, which Adafruit GFX inherts,
+ * so we need to have our own rudimentary implementation
+ */
 struct Print {
 	virtual void write(uint8_t) = 0;
 	void print(const char *s) {

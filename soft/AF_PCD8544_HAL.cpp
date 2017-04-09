@@ -24,6 +24,10 @@ Augmented to work with STM32 HAL by Denis Kokarev
 #define	LOW		GPIO_PIN_RESET
 #define	HIGH	GPIO_PIN_SET
 
+enum {
+	COMMAND = 0,
+	DATA = 1
+};
 
 static void digitalWrite(const STM_HAL_Pin &pin, GPIO_PinState val) {
 	HAL_GPIO_WritePin(pin.base, pin.pin, val);
@@ -123,7 +127,7 @@ void AF_PCD8544_HAL::begin(uint8_t contrast, uint8_t bias) {
 }
 
 
-inline void AF_PCD8544_HAL::data(uint8_t *p, uint16_t sz) {
+void AF_PCD8544_HAL::data(uint8_t *p, uint16_t sz) {
     // Hardware SPI write.
 	if (mode != DATA) {
 		while(HAL_SPI_GetState(&_hspi) != HAL_SPI_STATE_READY) {

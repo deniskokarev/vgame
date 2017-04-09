@@ -1,5 +1,6 @@
-/*
+/**
  * User-level API to progrm our mini-console
+ * @author Denis Kokarev
  */
 
 #include "program.h"
@@ -17,8 +18,8 @@ const static STM_HAL_Pin rst {GPIOA, GPIO_PIN_15};
 
 /*** Events Queue *************************************/
 
-/*
- * Our event queue is ring buffer
+/**
+ * Our system event queue is a ring buffer
  */
 class RingbufQueue: public EventQueue {
 protected:
@@ -49,7 +50,11 @@ public:
 /* our events queue */
 constexpr int EQ_SZ = 16;
 static Event q[EQ_SZ];
-RingbufQueue rbevents(q, EQ_SZ);
+static RingbufQueue rbevents(q, EQ_SZ);
+
+/**
+ * our global events queue
+ */
 EventQueue *events = &rbevents;
 
 /*** Program ******************************************/
@@ -62,7 +67,7 @@ void Program::setMainProgram(Program *p) {
 	main_program = p;
 }
 
-/*
+/**
  * Merely declare your Program object to register it as main program
  * If you'll be declaring multiple programs the last constructed one
  * will become main_program
@@ -73,7 +78,7 @@ Program::Program():display(hspi1, dc, cs, rst),refresh(1) {
 	setMainProgram(this);
 }
 
-/* typical program initialization */
+/** typical program initialization */
 void Program::init() {
 	display.begin();
 }
@@ -81,8 +86,8 @@ void Program::init() {
 /* need this fn defined in main.c, which is not exported */
 extern "C" void SystemClock_Config(void);
 
-/*
- * enter STOPSLEEP mode
+/**
+ * enter STOPSLEEP mode - best energy efficiency slower wakeup
  * to be awoken either by a key
  * or on timeout
  */
@@ -102,8 +107,8 @@ void Program::stopSleep(int sec) {
 	}
 }
 
-/*
- * enter SLEEP mode
+/**
+ * enter SLEEP mode - reasonable enery efficiency with fast wakeup
  * to be awoken either by a key
  * or on timeout
  */
@@ -129,7 +134,7 @@ void Program::sleepSleep(int sec) {
 	}
 }
 
-/*
+/**
  * our typical execution loop
  */
 void Program::execute() {
@@ -149,19 +154,22 @@ void Program::execute() {
 	}
 }
 
-/* when need to change sleep cycle */
+/*! when need to change sleep cycle */
 void Program::setRefresh(int r) {
 	refresh = r;
 }
 
 /*** WProgram *****************************************/
 
+/**
+ * one window can pass the control to another windows this way
+ */
 void WProgram::setMainWindow(Window *w) {
 	mainWindow = w;
 	mainWindow->draw();
 }
 
-/* we just have to redefine event handler */
+/*! WProgram simply delegates its main window to handle events */
 Event WProgram::handleEvent(Event event) {
 	return mainWindow->handleEvent(event);
 }
@@ -170,7 +178,7 @@ Event WProgram::handleEvent(Event event) {
 
 extern "C" {
 
-	/* Buttons IRQ handler */
+	/*! Buttons IRQ handler */
 	void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 		switch (GPIO_Pin) {
 		case GPIO_PIN_3:
@@ -191,13 +199,13 @@ extern "C" {
 		}
 	}
 
-	/* RTC wakeup IRQ handler */
+	/*! RTC wakeup IRQ handler */
 	void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc) {
 		events->put(Event::EV_TIMER);
 	}
 
-	/*
-	 * Entry point from main.c
+	/**
+	 * Entry point from main.c to all our event handling infrastructure
 	 */
 	void exec() {
 		while(true)

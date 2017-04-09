@@ -49,43 +49,74 @@ Augmented to work with STM32 HAL by Denis Kokarev
 #define PCD8544_SETBIAS 0x10
 #define PCD8544_SETVOP 0x80
 
+/**
+ * To incapsulate STM32 pin into a single structure
+ */
 struct STM_HAL_Pin {
 	GPIO_TypeDef* base;
 	uint16_t pin;
 };
 
+/**
+ * A subclass of a generic Arduino-based Adafruit GFX library
+ * to use Nokia LCD display on STM32 HAL platform
+ * @author Limor Fried/Ladyada 
+ * @author Denis Kokarev
+ */
 class AF_PCD8544_HAL : public Adafruit_GFX {
  public:
-  // SPI and all pins should already be initialized at the moment of screen construction 
-  AF_PCD8544_HAL(SPI_HandleTypeDef &hspi,
-					   const STM_HAL_Pin &dc,
-					   const STM_HAL_Pin &cs,
-					   const STM_HAL_Pin &rst
-					   );
+	/**
+	 * Construct the screen but don't send any commands to it yet.
+	 * SPI and all pins should be initialized by the time of begin()
+	 */
+	AF_PCD8544_HAL(SPI_HandleTypeDef &hspi,
+				   const STM_HAL_Pin &dc,
+				   const STM_HAL_Pin &cs,
+				   const STM_HAL_Pin &rst
+				   );
 
-  void begin(uint8_t contrast = 60, uint8_t bias = 0x04);
+	/**
+	 * send initialization sequence to the screen
+	 */
+	void begin(uint8_t contrast = 60, uint8_t bias = 0x04);
+	/**
+	 * send contrast command to the screen
+	 */
+	void setContrast(uint8_t val);
+	/**
+	 * clear display buffer (but don't refresh the screen)
+	 */ 
+	void clearDisplay(void);
+	/**
+	 * The primary function to copy the entire buffer to the screen.
+	 * Use it every time you want to update screen content after series of
+	 * drawing functions, such as drawLine(), print(), etc
+	 */
+	void display();
+	/**
+	 * check the pixel in the buffer
+	 */
+	uint8_t getPixel(int8_t x, int8_t y);
+	/**
+	 * draw one pixel, which unlocks all other Adafruit_GFX functions
+	 */
+	void drawPixel(int16_t x, int16_t y, uint16_t color) override;
+	/**
+	 * Send command code to the screen
+	 */
+	void command(uint8_t c);
+	/**
+	 * Send a data block to the screen
+	 */
+	void data(uint8_t *p, uint16_t sz);
   
-  void command(uint8_t c);
-  void data(uint8_t *p, uint16_t sz);
-  
-  void setContrast(uint8_t val);
-  void clearDisplay(void);
-  void display();
-  
-  void drawPixel(int16_t x, int16_t y, uint16_t color);
-  uint8_t getPixel(int8_t x, int8_t y);
-
- private:
-  enum {
-	  COMMAND = 0,
-	  DATA = 1
-  };
-  SPI_HandleTypeDef &_hspi;
-  const STM_HAL_Pin &_dc;
-  const STM_HAL_Pin &_cs;
-  const STM_HAL_Pin &_rst;
-  uint8_t pcd8544_buffer[LCDWIDTH * LCDHEIGHT / 8];
-  uint8_t mode;
+ protected:
+	SPI_HandleTypeDef &_hspi;
+	const STM_HAL_Pin &_dc;
+	const STM_HAL_Pin &_cs;
+	const STM_HAL_Pin &_rst;
+	uint8_t pcd8544_buffer[LCDWIDTH * LCDHEIGHT / 8];
+	uint8_t mode;
 };
 
 #endif
