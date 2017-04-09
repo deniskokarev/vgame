@@ -1,3 +1,11 @@
+/**
+ * @file
+ * @breif Nokia LCD subclass for Adafruit GFX lib
+ *
+ * This is a library for our Monochrome Nokia 5110 LCD Displays
+ * @author Limor Fried/Ladyada
+ * @author Denis Kokarev
+ */
 /*********************************************************************
 This is a library for our Monochrome Nokia 5110 LCD Displays
 
@@ -50,7 +58,7 @@ Augmented to work with STM32 HAL by Denis Kokarev
 #define PCD8544_SETVOP 0x80
 
 /**
- * To incapsulate STM32 pin into a single structure
+ * @brief Combining STM32 pin into a single structure
  */
 struct STM_HAL_Pin {
 	GPIO_TypeDef* base;
@@ -58,6 +66,8 @@ struct STM_HAL_Pin {
 };
 
 /**
+ * @brief Nokia LCD display implementation
+ *
  * A subclass of a generic Arduino-based Adafruit GFX library
  * to use Nokia LCD display on STM32 HAL platform
  * @author Limor Fried/Ladyada 
@@ -66,7 +76,8 @@ struct STM_HAL_Pin {
 class AF_PCD8544_HAL : public Adafruit_GFX {
  public:
 	/**
-	 * Construct the screen but don't send any commands to it yet.
+	 * @brief Construct the screen but don't send any commands to it yet.
+	 *
 	 * SPI and all pins should be initialized by the time of begin()
 	 */
 	AF_PCD8544_HAL(SPI_HandleTypeDef &hspi,
@@ -76,46 +87,56 @@ class AF_PCD8544_HAL : public Adafruit_GFX {
 				   );
 
 	/**
-	 * send initialization sequence to the screen
+	 * @brief send initialization sequence to the screen
 	 */
 	void begin(uint8_t contrast = 60, uint8_t bias = 0x04);
 	/**
-	 * send contrast command to the screen
+	 * @brief send contrast command to the screen
 	 */
 	void setContrast(uint8_t val);
 	/**
-	 * clear display buffer (but don't refresh the screen)
+	 * @brief clear display buffer (but don't refresh the screen)
 	 */ 
 	void clearDisplay(void);
 	/**
+	 * @brief push the buffer content to the screen
+	 *
 	 * The primary function to copy the entire buffer to the screen.
 	 * Use it every time you want to update screen content after series of
 	 * drawing functions, such as drawLine(), print(), etc
 	 */
 	void display();
 	/**
-	 * check the pixel in the buffer
+	 * @brief check the pixel in the buffer
 	 */
 	uint8_t getPixel(int8_t x, int8_t y);
 	/**
-	 * draw one pixel, which unlocks all other Adafruit_GFX functions
+	 * @brief draw one pixel in the buffer, which unlocks potential of all other Adafruit_GFX functions
 	 */
 	void drawPixel(int16_t x, int16_t y, uint16_t color) override;
 	/**
-	 * Send command code to the screen
+	 * @brief send command code to the screen
 	 */
 	void command(uint8_t c);
 	/**
-	 * Send a data block to the screen
+	 * @brief send a data block to the screen
 	 */
 	void data(uint8_t *p, uint16_t sz);
   
  protected:
-	SPI_HandleTypeDef &_hspi;
-	const STM_HAL_Pin &_dc;
-	const STM_HAL_Pin &_cs;
-	const STM_HAL_Pin &_rst;
-	uint8_t pcd8544_buffer[LCDWIDTH * LCDHEIGHT / 8];
+	SPI_HandleTypeDef &_hspi;	///< SPI device handler
+	const STM_HAL_Pin &_dc;		///< Data/Command pin
+	const STM_HAL_Pin &_cs;		///< SPI chip select pin
+	const STM_HAL_Pin &_rst;	///< Reset pin
+	uint8_t pcd8544_buffer[LCDWIDTH * LCDHEIGHT / 8]; ///< screen buffer to hold all pixels
+	/**
+	 * @brief what did we push via SPI last time
+	 * 
+	 * This flag is necessary to prevent _dc pin change before all commands or all data
+	 * finish transmission
+	 * @see command()
+	 * @see data()
+	 */
 	uint8_t mode;
 };
 

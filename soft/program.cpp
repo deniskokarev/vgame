@@ -1,5 +1,6 @@
 /**
- * User-level API to progrm our mini-console
+ * @file
+ * @brief User-level API to progrm our mini-console
  * @author Denis Kokarev
  */
 
@@ -12,23 +13,32 @@
  * all of these must match the CubeMX initialized PINs
  * the SPI handle is expected to be named hspi1
  */
-const static STM_HAL_Pin dc {GPIOB, GPIO_PIN_7};
-const static STM_HAL_Pin cs {GPIOB, GPIO_PIN_6};
-const static STM_HAL_Pin rst {GPIOA, GPIO_PIN_15};
+const static STM_HAL_Pin dc {GPIOB, GPIO_PIN_7};		///< our data/command hardware pin as per schematics
+const static STM_HAL_Pin cs {GPIOB, GPIO_PIN_6};		///< our SPI chip select pin as per schematics
+const static STM_HAL_Pin rst {GPIOA, GPIO_PIN_15};		///< our reset screen pin as per schematics
 
 /*** Events Queue *************************************/
 
 /**
- * Our system event queue is a ring buffer
+ * @brief Our system event queue is a ring buffer
  */
 class RingbufQueue: public EventQueue {
 protected:
-	Event *q;
-	int sz;
-	int h, t;
+	Event *q;	///< memory location for the ringbuf
+	int sz;		///< size of the buffer
+	int h;		///< head of the queue
+	int t;		///< tail of the queue
 public:
+	/**
+	 * @brief initialize the RingBuffer on the predefined buffer
+	 * @param - event buffer location
+	 * @param - sz its size in number of events
+	 */
 	RingbufQueue(Event *_q, int _sz):q(_q),sz(_sz),h(0),t(0) {
 	}
+	/**
+	 * @brief simple implementation
+	 */
 	virtual Event get() override {
 		if (t != h) {
 			Event rc = q[h];
@@ -38,6 +48,9 @@ public:
 			return Event::EV_NONE;
 		}
 	}
+	/**
+	 * @brief simple implementation
+	 */
 	virtual void put(Event e) override {
 		int nt = (t+1) % sz;
 		if (nt != h) {
@@ -53,14 +66,16 @@ static Event q[EQ_SZ];
 static RingbufQueue rbevents(q, EQ_SZ);
 
 /**
- * our global events queue
+ * @brief our global events queue is an instance of RingbufQueue()
  */
 EventQueue *events = &rbevents;
 
 /*** Program ******************************************/
 
 
-/* the global singleton program for execution */
+/**
+ * @brief all Programs share the knowledge which one of them is the main program
+ */
 static Program *main_program;
 
 void Program::setMainProgram(Program *p) {
@@ -68,6 +83,8 @@ void Program::setMainProgram(Program *p) {
 }
 
 /**
+ * @brief any derived program must invoke the parent constructor
+ *
  * Merely declare your Program object to register it as main program
  * If you'll be declaring multiple programs the last constructed one
  * will become main_program
@@ -135,7 +152,7 @@ void Program::sleepSleep(int sec) {
 }
 
 /**
- * our typical execution loop
+ * @brief our typical execution loop
  */
 void Program::execute() {
 	init();
@@ -154,7 +171,7 @@ void Program::execute() {
 	}
 }
 
-/*! when need to change sleep cycle */
+/** when need to change sleep cycle */
 void Program::setRefresh(int r) {
 	refresh = r;
 }
@@ -178,7 +195,12 @@ Event WProgram::handleEvent(Event event) {
 
 extern "C" {
 
-	/*! Buttons IRQ handler */
+	/**
+	 * @brief Buttons IRQ handler
+	 *
+	 * Convert interrupst into application level events
+	 * The name of the function must exactly match to what HAL library expects
+	 */
 	void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 		switch (GPIO_Pin) {
 		case GPIO_PIN_3:
@@ -199,13 +221,21 @@ extern "C" {
 		}
 	}
 
-	/*! RTC wakeup IRQ handler */
+	/**
+	 * @brief RTC wakeup IRQ handler
+	 *
+	 * Convert interrupst into application level events
+	 * The name of the function must exactly match to what HAL library expects
+	 */
 	void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc) {
 		events->put(Event::EV_TIMER);
 	}
 
 	/**
-	 * Entry point from main.c to all our event handling infrastructure
+	 * @brief Entry point from main.c to all our event handling infrastructure
+	 *
+	 * Execute the current main program. When it finishes - execute the main program again
+	 * This way a program may transfer the focus to another program
 	 */
 	void exec() {
 		while(true)

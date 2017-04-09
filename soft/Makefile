@@ -55,3 +55,7 @@ burn upload flash: $(PROJ_NAME).bin
 # then we flash and set breakpoint at main
 debug: $(PROJ_NAME).elf gdb.x
 	$(AGCCBIN)gdb -x gdb.x $(PROJ_NAME).elf
+
+# in order to render doxygen documentation into doxy directory
+doc:
+	doxygen

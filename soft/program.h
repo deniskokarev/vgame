@@ -1,4 +1,7 @@
 /**
+ * @file
+ * @brief User-level API for our hardware.
+ *
  * User-level API to program our mini-console
  * Just define your own Program class and create its global instance
  * Use either a typical event-handling model by overriding handleEvent()
@@ -15,15 +18,15 @@
  * Events available on our hardware
  */
 enum class Event: std::int8_t {
-	EV_NONE = 0,
-	EV_CLOSE,
-	EV_TIMER,
-	EV_KEY_LEFT,
-	EV_KEY_UP,
-	EV_KEY_DOWN,
-	EV_KEY_RIGHT,
-	EV_KEY_ENTER,
-	EV_CUSTOM,
+	EV_NONE = 0,	///< nothing
+	EV_CLOSE,		///< pass the focus to another program
+	EV_TIMER,		///< wokeup on timer after sleep period
+	EV_KEY_LEFT,	///< left key pressed
+	EV_KEY_UP,		///< up key pressed
+	EV_KEY_DOWN,	///< down key pressed
+	EV_KEY_RIGHT,	///< right key pressed
+	EV_KEY_ENTER,   ///< center key pressed
+	EV_CUSTOM,		///< used-defined events
 	EV_CUSTOM_1,
 	EV_CUSTOM_2,
 	EV_CUSTOM_3,
@@ -42,7 +45,9 @@ constexpr Event operator+(const Event& x, int n) {
 }
 
 /**
- * An abstract event queue to enqueue/dequeue events @see Event
+ * @brief Abstract queue for our events
+ *
+ * to enqueue/dequeue events @see Event
  */
 class EventQueue {
 public:
@@ -64,7 +69,7 @@ public:
 extern EventQueue *events;
 
 /**
- * Base class to handle all events
+ * @brief Base class to handle all events
  */
 class EventHandler {
 public:
@@ -77,6 +82,8 @@ public:
 };
 
 /**
+ * @brief An abstract program class to work on our hardware.
+ *
  * An abstract program class to work on our hardware.
  * You would need to define your own subclass and declare
  * just one global instance of it. This is enough to designate
@@ -84,50 +91,52 @@ public:
  */
 class Program: public EventHandler {
 protected:
-	AF_PCD8544_HAL display;
-	int refresh;
-	Program();
+	AF_PCD8544_HAL display;	///< Nokia LCD display
+	int refresh;			///< for how long to sleep on no events
+	Program();				///< you cannot instantiate the based program class, thus protected constructor
 public:
-	/*! to be used by current program to pass the control to another program */
+	/** @brief to be used by current program to pass the control to another program */
 	static void setMainProgram(Program *p);
-	/*! you can use custom initialization, but don't forget to call master init() */
+	/** @brief you can use custom initialization in your subclassed program, but don't forget to call master init() */
 	virtual void init();
-	/*! put CPU into STOP sleep mode until key pressed or time-out - best energy efficiency with slow wakeup */
+	/** @brief put CPU into STOP sleep mode until key pressed or time-out - best energy efficiency with slow wakeup */
 	void stopSleep(int sec);
-	/*! put CPU into regular sleep mode until key pressed or time-out - medium efficiency with fast wakeup */
+	/** @brief put CPU into regular sleep mode until key pressed or time-out - medium efficiency with fast wakeup */
 	void sleepSleep(int sec);
 	/**
+	 * @brief run event handling loop
+	 *
 	 * Simply get next event from the queue and invoke handleEvent() on it.
 	 * if you want you can redefine processing event loop entirerly
 	 */
 	virtual void execute();
-	/*! for how long to put CPU to sleep if no event available */
+	/** @brief for how long to put CPU to sleep if no event available */
 	void setRefresh(int r);
-	/*! entry point from C code */
+	/** @brief entry point from C code */
 	friend void ::exec();
 };
 
 /**
- * A window-style event handler, which can draw on the screen
+ * @brief an abstract window occupying entire screen
+ * 
+ * Our window is just an event handler, which can draw itself on the screen
  */
 class Window: public EventHandler {
 public:
 	/**
-	 * display the window content. @see WProgram
+	 * @brief display the window content. @see WProgram
 	 */
 	virtual void draw() = 0;
 };
 
-/**
- * A container that has multiple window(s) and dispatches events to the main window
- */
+/** A container that has multiple window(s) and dispatches events to the main window */
 class WProgram: public Program {
 protected:
-	/*! the window that is in the "focus" - i.e. handles all events */
+	/** the window that is in the "focus" - i.e. handles all events */
 	Window *mainWindow;
 public:
-	/*! this way one window can pass the "focus" to another window */
+	/** this way one window can pass the "focus" to another window */
 	void setMainWindow(Window *w);
-	/*! pass the event to the handleEvent() of the main window */
+	/** pass the event to the handleEvent() of the main window */
 	virtual Event handleEvent(Event event) override;
 };

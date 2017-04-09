@@ -1,12 +1,15 @@
 /**
- * Revery game for our STM32 mini-console
+ * @file
+ * @brief Revery game for our STM32 mini-console
+ *
+ * Uses player vs computer reversy library
  * @author Denis Kokarev
  */
 
 #include "program.h"
 
 /*
- * enable if we want to start with the Autotest window
+ * enable AUTOTEST if we want to start with the Autotest window
  * useful for benchmarking and debugging
  */ 
 //#define AUTOTEST
@@ -15,6 +18,7 @@ extern "C" {
 #include "minimax.h"
 }
 
+/* num->string conversion */
 static char *
 lltoan(char *out, long long i, int n) {
 	char *p = out;
@@ -30,14 +34,18 @@ lltoan(char *out, long long i, int n) {
 }
 
 /**
- * A game of reversy for our mini-console
+ * @brief A game of reversy program
+ *
+ * Derived from the basic program for our STM32 mini-console
  * contains three Windows - Start, Game and Again
  * It also contains the game board
  */
 class MyProgram: public WProgram {
 protected:
 	/**
-	 * All MyWindows to have a reference to our MyProgram
+	 * @brief Basic abstract window for MyProgram
+	 *
+	 * All MyWindows must have a direct reference to our MyProgram
 	 * to access its fields, such as display and game
 	 * board
 	 */
@@ -45,23 +53,25 @@ protected:
 	protected:
 		/**
 		 * A direct hardcoded access to master program via
-		 * the same static reference for all windows is just fine
+		 * the same static reference for all windows
 		 */
-		static MyProgram &program;
+		static MyProgram &program;	///< any window to have direct ref to our program
 	};
 
 protected:
 	/**
-	 * Our splash window, simply displays about message
+	 * @brief Begin window
+	 *
+	 * Our splash window simply displays about message
 	 * and offers to start the game
 	 */
 	class StartWindow: public MyWindow {
 	protected:
 		char *label; // cannot be const due to stupid Adafruit lib
-		Adafruit_GFX_Button startButton; /*! GUI screen button */
+		Adafruit_GFX_Button startButton; ///< GUI screen button
 	public:
 		/**
-		 * initialize a window and START button
+		 * @brief initialize a window and START button
 		 */
 		StartWindow():MyWindow(),label((char*)"START") {
 			int16_t x, y;
@@ -79,7 +89,7 @@ protected:
 								   1);
 		}
 		/**
-		 * proceed to Game window on KEY_ENTER event
+		 * @brief proceed to Game window on KEY_ENTER event
 		 */
 		virtual Event handleEvent(Event event) override {
 			switch(event) {
@@ -95,7 +105,7 @@ protected:
 			return Event::EV_NONE;
 		}
 		/**
-		 * Display our staring message and on-screen START button
+		 * @brief Display our staring message and on-screen START button
 		 */
 		virtual void draw() override {
 			program.display.print("Reversy v0.9");
@@ -105,7 +115,11 @@ protected:
 	};
 
 	/**
-	 * our main Game window, which handles user keys and paints the board
+	 * @brief Our main Game window, which handles user keys and paints the board
+	 *
+	 * The Game window directly refers to MyProgram to access game state
+	 * and its screen for drawing. It updates the cursor coordinates and
+	 * invokes player vs computer reversy library
 	 */
 	class GameWindow: public MyWindow {
 	protected:
@@ -143,7 +157,7 @@ protected:
 			}
 		}
 		/**
-		 * Paint the current cursor location with the given color
+		 * @brief Paint the current cursor location with the given color
 		 * @param r - row number
 		 * @param c - column number
 		 * @param color - paint with what color
@@ -157,7 +171,7 @@ protected:
 			program.display.drawLine(px+cell_xsz-2, py, px+cell_xsz-2, py+cell_ysz-2, color);
 		}
 		/**
-		 * Paint empty 8x8 grid on the screen
+		 * @brief Paint empty 8x8 grid on the screen
 		 */
 		void drawGrid() {
 			for (int n=0; n<board_dim-1; n++) {
@@ -168,7 +182,7 @@ protected:
 			}
 		}
 		/**
-		 * Paint the current score on the right side of the screen
+		 * @brief Paint the current score on the right side of the screen
 		 * @param nWhite - number of white chips
 		 * @param nBlack - number of black chips
 		 */
@@ -190,8 +204,7 @@ protected:
 			program.display.print(sb);
 		}
 		/**
-		 * Paint the grid, all chips and score
-		 * Push the image to the screen
+		 * @brief Paint the grid, all chips and score and push the image to the screen
 		 */
 		void redrawBoard() {
 			drawGrid();
@@ -205,9 +218,11 @@ protected:
 			program.display.display();
 		}
 		/**
-		 * Execute when user pressed ENTER.
+		 * @brief Executes when user pressed ENTER.
+		 *
 		 * Make a turn by player at the current cursor position
 		 * and immediately perform the turn by the computer
+		 * Check game over condition
 		 */
 		bool mkTurn() {
 			GAME_TURN turn = {program.mycolor, program.cursorX, program.cursorY};
@@ -234,14 +249,14 @@ protected:
 
 	public:
 		/**
-		 * Draw game board and push it to the screen
+		 * @brief Draw entire game board and push it to the screen
 		 */
 		virtual void draw() override {
 			program.display.clearDisplay();
 			redrawBoard();
 		};
 		/**
-		 * Handle user keys by moving cursor on arrows and making a turn on enter
+		 * @brief Handle user keys by moving cursor on arrows and making a turn on enter
 		 */
 		virtual Event handleEvent(Event event) override {
 			Event rc = Event::EV_NONE;
@@ -287,12 +302,16 @@ protected:
 
 #ifdef AUTOTEST
 	/**
+	 * @brief Autotesting window
+	 *
 	 * Optional window for autotesting - when this window becomes main and there is
 	 * a CUSTOM_1 event in the events queue, the computer starts playing with itself
 	 * until game is over. Then regular Game window becomes active
 	 */
 	class TestGameWindow: public GameWindow {
 		/**
+		 * @brief play in the loop alternating player color
+		 *
 		 * if the events queue has CUSTOM_1 event start playing with itself until the game is over
 		 * then activate regular game window
 		 */ 
@@ -322,14 +341,16 @@ protected:
 #endif
 
 	/**
+	 * @brief Game over message
+	 *
 	 * AgainWindow displayed after the game is over
 	 * and shows the score and offers another round
 	 */
 	class AgainWindow: public MyWindow {
 	protected:
-		const char *message;			/*! game result */
+		const char *message;			///< game result
 		char *label; // cannot be const due to stupid Adafruit lib
-		Adafruit_GFX_Button againButton;	/*! GUI screen button */
+		Adafruit_GFX_Button againButton;	///< GUI screen button
 	public:
 		AgainWindow():MyWindow(),message((char*)""),label((char*)"Again") {
 			int16_t x, y;
@@ -347,6 +368,8 @@ protected:
 								   1);
 		}
 		/**
+		 * @brief display until user presses enter
+		 *
 		 * Activate Game window upon KEY_ENTER
 		 */
 		virtual Event handleEvent(Event event) override {
@@ -364,7 +387,7 @@ protected:
 			return Event::EV_NONE;
 		}
 		/**
-		 * Select which message to display, WIN/LOSE/DRAW
+		 * @brief Select which message to display, WIN/LOSE/DRAW
 		 */
 		void updateMessage() {
 			int cu = chips_count(&program.board, program.mycolor);
@@ -377,7 +400,7 @@ protected:
 				message = "!!!DRAW!!!";
 		}
 		/**
-		 * display the message and the GUI button
+		 * @brief display the message and the GUI button
 		 */
 		virtual void draw() override {
 			program.display.clearDisplay();
@@ -390,72 +413,80 @@ protected:
 	};
 
 	/**
-	 * Splash window
+	 * @brief Splash window
 	 */
 	StartWindow startWindow;
 	/**
-	 * Main Game window
+	 * @brief Main Game window
 	 */
 	GameWindow gameWindow;
 	/**
-	 * End of the game status window
+	 * @brief End of the game status window
 	 */
 	AgainWindow againWindow;
 
 protected:
 	/**
-	 * board size == 8
+	 * @brief board size == 8
 	 */
 	static constexpr int board_dim = MAX_DIM;
 	/**
-	 * height of the single cell on the screen
+	 * @brief height of the single cell on the screen
 	 */
 	static constexpr int cell_ysz = LCDHEIGHT/board_dim;
 	/**
-	 * height of entire board on the screen
+	 * @brief height of entire board on the screen
 	 */
 	static constexpr int board_ysz = cell_ysz*board_dim-1;
 	/**
-	 * width of the single cell, which is a bit greater than height due to horizontal screen stretch
-	 * to make it appear square
+	 * @brief width of the single cell
+	 *
+	 * the width has to be a bit greater than height due to horizontal pixels deformation
+	 * to make cells appear square
 	 */
 	static constexpr int cell_xsz = cell_ysz+1;
 	/**
-	 * width of entire board
+	 * @brief width of entire board
 	 */
 	static constexpr int board_xsz = cell_xsz*board_dim-1;
 	/**
-	 * White chip sprite
+	 * @brief White chip sprite
 	 */
 	static const unsigned char whiteChip[cell_ysz-2][cell_xsz-2];
 	/**
-	 * Black chip sprite
+	 * @brief Black chip sprite
 	 */
 	static const unsigned char blackChip[cell_ysz-2][cell_xsz-2];
 	/**
-	 * game board with all the chips on it
+	 * @brief game board with all the chips on it
 	 */
 	GAME_STATE board;
 	/**
-	 * Game cursor position
+	 * @brief Game cursor position X (column)
 	 */ 
-	signed char cursorX, cursorY;
+	signed char cursorX;
 	/**
-	 * player's color
+	 * @brief Game cursor position Y (row)
+	 */ 
+	signed char cursorY;
+	/**
+	 * @brief player's color
 	 */
 	CHIP_COLOR mycolor;
 	/**
-	 * flag to be set when game is over
+	 * @brief flag to be set when game is over
 	 */
 	bool gameIsOver;
 	/**
-	 * Computer level. Means how many steps deep the computer will be looking
+	 * @brief difficulty level
+	 *
+	 * Computer difficulty level. Means how many steps deep the computer will be looking
 	 * to find the best turn (default=5)
 	 */
 	char level;
 public:
 	/**
-	 * perform minimal initialization
+	 * @brief perform minimal initialization
 	 */
 	MyProgram():WProgram(),
 				cursorX(3),
@@ -464,7 +495,7 @@ public:
 	{
 	}
 	/**
-	 * Reset game board and set focus to the StartWindow
+	 * @brief Reset game board and set focus to the StartWindow
 	 */
 	virtual void init() override {
 		Program::init();
@@ -480,7 +511,7 @@ public:
 		level = 5;
 	}
 	/**
-	 * Wipe out game board
+	 * @brief Wipe out game board
 	 */
 	void startNewGame() {
 		cursorX = 3;
@@ -499,7 +530,7 @@ public:
 };
 
 /**
- * White chip sprite
+ * @brief White chip sprite
  */
 const unsigned char MyProgram::whiteChip[cell_ysz-2][cell_xsz-2] = {
 	{0, 1, 1, 0},
@@ -507,7 +538,7 @@ const unsigned char MyProgram::whiteChip[cell_ysz-2][cell_xsz-2] = {
 	{0, 1, 1, 0},
 };
 /**
- * Black chip sprite
+ * @brief Black chip sprite
  */
 const unsigned char MyProgram::blackChip[cell_ysz-2][cell_xsz-2] = {
 	{0, 1, 1, 0},
@@ -515,10 +546,10 @@ const unsigned char MyProgram::blackChip[cell_ysz-2][cell_xsz-2] = {
 	{0, 1, 1, 0},
 };
 /**
- * We must instantiate our program to register it into execution event loop
+ * @brief We must instantiate our program to register it into execution event loop
  */
 MyProgram mp;
 /**
- * All our windows simply refer to our program
+ * @brief All our windows simply refer to our program
  */
 MyProgram &MyProgram::MyWindow::program = mp;

@@ -1,4 +1,6 @@
 /**
+ * @file
+ * @brief Junction with CubeMX C code.
  * This is a bridge between STM32 HAL generated C code and our C++ event handling loop
  * @see Program
  * @author Denis Kokarev
